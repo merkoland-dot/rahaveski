@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmer Tõnis – Kultuuride tasuvuskalkulaator 2026</title>
+<script>
+(function(){
+  function loadScript(src, onload, onerror){
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = onload;
+    s.onerror = onerror;
+    document.head.appendChild(s);
+  }
+  function tryFallback(){
+    loadScript(
+      'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js',
+      function(){ window.__chartJsReady = true; if(window.__initApp) window.__initApp(); },
+      function(){ document.getElementById('chartWrap').innerHTML = '<p style="color:#7a8c7e;padding:20px;font-size:0.8rem">Chart.js laadimine ebaõnnestus</p>'; }
+    );
+  }
+  loadScript(
+    'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+    function(){ window.__chartJsReady = true; if(window.__initApp) window.__initApp(); },
+    tryFallback
+  );
+})();
+</script>
+
+<style>
+:root {
+  --bg: #0e100f;
+  --surface: #161a17;
+  --surface2: #1e2520;
+  --border: #2a3028;
+  --green: #5dbe7a;
+  --green-dim: #2d5c3a;
+  --amber: #d4a017;
+  --red: #c0392b;
+  --text: #d8ddd6;
+  --text-dim: #7a8c7e;
+  --accent: #8fce6a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 0 60px;
+}
+
+/* Header */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding: 28px 40px 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.header h1 {
+  font-family: Georgia, serif;
+  font-size: 2rem;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.header span {
+  font-family: Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 40px 0;
+}
+
+/* Input row */
+.inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.input-group label {
+  font-family: Consolas, monospace;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.input-group input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: Consolas, monospace;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.input-group input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+.inputs-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: -16px;
+  margin-bottom: 20px;
+  padding-left: 2px;
+}
+
+/* Crop tabs */
+.crop-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.crop-tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: system-ui, sans-serif;
+}
+.crop-tab:hover { border-color: var(--green-dim); color: var(--text); }
+.crop-tab.active {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Table */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table-wrap h2 {
+  font-family: Georgia, serif;
+  font-size: 1.1rem;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Consolas, monospace;
+  font-size: 0.78rem;
+}
+thead th {
+  background: var(--surface2);
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 8px 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+thead th:first-child { text-align: left; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+
+tbody td {
+  padding: 9px 12px;
+  text-align: right;
+  color: var(--text-dim);
+}
+tbody td:first-child { text-align: left; color: var(--text); font-weight: 500; }
+
+.neto-pos { color: var(--green); font-weight: 600; }
+.neto-neg { color: var(--red); }
+.neto-warn { color: var(--amber); }
+
+/* Right panel */
+.right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* Yield slider card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.card h3 {
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.profit-big {
+  font-family: Georgia, serif;
+  font-size: 2.8rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.slider-label {
+  font-family: Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.slider-val {
+  font-family: Consolas, monospace;
+  font-size: 0.9rem;
+  color: var(--accent);
+  min-width: 52px;
+  text-align: right;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg);
+}
+
+/* Cost breakdown */
+.breakdown { display: flex; flex-direction: column; gap: 6px; }
+.bline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 3px 0;
+}
+.bline-label { color: var(--text-dim); }
+.bline-val { font-family: Consolas, monospace; color: var(--text); }
+.bline.total {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 8px;
+  font-weight: 600;
+}
+.bline.total .bline-label { color: var(--text); }
+.bline.revenue .bline-val { color: var(--accent); }
+
+/* Chart */
+.chart-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
+
+/* Breakeven badge */
+.be-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+.be-badge strong { color: var(--text); }
+
+/* Recommendation */
+.rec-box {
+  background: var(--surface2);
+  border-left: 3px solid var(--green-dim);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.rec-box.warn { border-left-color: var(--amber); }
+.rec-box.bad { border-left-color: var(--red); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .main { padding: 20px 16px 0; }
+  .header { padding: 20px 16px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌾 Farmer Tõnis – Kultuuride tasuvus 2026</h1>
+  <span>sisendid muudetavad · andmed: farmertonis.ee</span>
+</div>
+
+<div class="main">
+
+  <!-- Input prices -->
+  <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Sisendhinnad</div>
+  <div class="inputs-grid" id="inputsGrid">
+    <div class="input-group">
+      <label>NPK 10-26-26 (€/t)</label>
+      <input type="number" id="inp_npk" value="579" step="1">
+    </div>
+    <div class="input-group">
+      <label>N-väetis YaraBela/N27 (€/t)</label>
+      <input type="number" id="inp_n" value="490" step="1">
+    </div>
+    <div class="input-group">
+      <label>Kütus (€/l)</label>
+      <input type="number" id="inp_fuel_l" value="1.00" step="0.05">
+    </div>
+    <div class="input-group">
+      <label>Püsikulud (€/ha)</label>
+      <input type="number" id="inp_fixed" value="500" step="10">
+    </div>
+    <div class="input-group">
+      <label>Kuivatus (€/t)</label>
+      <input type="number" id="inp_dry" value="20" step="1">
+    </div>
+    <div class="input-group">
+      <label>Transport (€/t)</label>
+      <input type="number" id="inp_trans" value="10" step="1">
+    </div>
+  </div>
+  <div class="inputs-note">* Muuda sisendhindu – kõik arvutused uuenevad automaatselt</div>
+
+  <!-- Crop tabs -->
+  <div class="crop-tabs" id="cropTabs">
+    <button class="crop-tab active" data-crop="oder">Suvioder</button>
+    <button class="crop-tab" data-crop="kaer">Kaer</button>
+    <button class="crop-tab" data-crop="suvinisu">Suvinisu</button>
+    <button class="crop-tab" data-crop="hernes">Hernes / Uba</button>
+    <button class="crop-tab" data-crop="taliraps">Taliraps</button>
+    <button class="crop-tab" data-crop="suviraps">Suviraps</button>
+  </div>
+
+  <div class="layout">
+    <!-- Table -->
+    <div>
+      <div class="table-wrap">
+        <h2 id="tableTitle">Suvioder</h2>
+        <div style="overflow-x:auto">
+          <table id="mainTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="card">
+          <div class="chart-wrap" id="chartWrap" style="position:relative;height:220px">
+            <canvas id="profitChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right-panel">
+      <div class="card">
+        <h3>Interaktiivne arvutus</h3>
+        <div class="slider-row">
+          <span class="slider-label">Saagikus</span>
+          <input type="range" id="yieldSlider" min="1" max="8" step="0.1" value="4">
+          <span class="slider-val" id="yieldDisplay">4.0 t/ha</span>
+        </div>
+        <div id="profitDisplay" class="profit-big good">–</div>
+        <div id="profitUnit" style="font-size:0.75rem;color:var(--text-dim);font-family:'DM Mono',monospace;margin-bottom:16px">€/ha (neto, ilma toetusteta)</div>
+        <div id="beDisplay" class="be-badge">Break-even: <strong id="beVal">–</strong></div>
+      </div>
+
+      <div class="card">
+        <h3>Kulud</h3>
+        <div class="breakdown" id="breakdown"></div>
+      </div>
+
+      <div id="recBox" class="rec-box"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Crop definitions ──────────────────────────────────────────────────────────
+// Each crop: yields[], sellPrice, plus function to compute variable costs at yield y
+
+const CROPS = {
+  oder: {
+    name: 'Suvioder',
+    yields: [3,4,5,6,7,8],
+    defaultSlider: 4, sliderMax: 8,
+    defaultPrice: 180, priceLabel: 'Oder hind (€/t)',
+    fuelLitres: 40, seedHa: 90,
+    // 1t: N=20, P=5, K=10 – NPK sized by K; artikkel: y*55 @ NPK599+Axan490
+    fertFn: (y, npk, nv) => {
+      const npkKg = (10/0.216)*y;  // K drives NPK amount
+      const axanKg = Math.max(0, (20*y - npkKg*0.10))/0.27;
+      return npkKg*(npk/1000) + axanKg*(nv/1000);
+    },
+    chemFn: y => y < 5 ? 10 : y < 7 ? 21 : 55,
+    dryPerT: true,
+    recs: {
+      good: 'Nulli tulemiseks on vaja üle 7 t/ha. Madalate püsikuludega on jumet olemas.',
+      mid:  '6+ t/ha annab positiivse tulemuse. Marginaalid on õhukesed.',
+      bad:  'Suurte püsikuludega on suvioder kahjumlik. Farmer Tõnis ei soovita.'
+    }
+  },
+
+  kaer: {
+    name: 'Kaer',
+    yields: [3,4,5,6,7,8],
+    defaultSlider: 4, sliderMax: 8,
+    defaultPrice: 158, priceLabel: 'Kaer hind (€/t)',
+    fuelLitres: 40,
+    // Seeme varieerub koos saagikusega (mikroväetised vm): 60,60,66,66,72,71
+    seedFn: y => y < 5 ? 60 : y < 7 ? 66 : 71,
+    // 1t: N=12(y<=4), N=14(y5-6), N=15(y>=7), P=4, K=8 – K drives NPK
+    fertFn: (y, npk, nv) => {
+      const nPerT = y <= 4 ? 12 : y <= 6 ? 14 : 15;
+      const npkKg = (8/0.216)*y;
+      const axanKg = Math.max(0, (nPerT*y - npkKg*0.10))/0.27;
+      return npkKg*(npk/1000) + axanKg*(nv/1000);
+    },
+    chemFn: y => y < 5 ? 6 : y < 7 ? 15 : 41,
+    dryPerT: true,
+    recs: {
+      good: 'Kaer on odramast ökonoomsem. 7+ t/ha annab plussi.',
+      mid:  '6 t/ha juures ollakse nulli lähedal.',
+      bad:  'Kaera kasvatamine suurte püsikuludega on kahjumlik. Farmer Tõnis ei soovita.'
+    }
+  },
+
+  suvinisu: {
+    name: 'Suvinisu',
+    yields: [3,4,5,6,7,8],
+    defaultSlider: 5, sliderMax: 8,
+    defaultPrice: 200, priceLabel: 'Suvinisu hind (€/t)',
+    fuelLitres: 40, seedHa: 90,
+    // 1t: N=20(y<=4) / N=25(y>=5), P=5, K=12 – K drives NPK
+    fertFn: (y, npk, nv) => {
+      const nPerT = y <= 4 ? 20 : 25;
+      const npkKg = (12/0.216)*y;
+      const axanKg = Math.max(0, (nPerT*y - npkKg*0.10))/0.27;
+      return npkKg*(npk/1000) + axanKg*(nv/1000);
+    },
+    chemFn: y => 50,
+    dryPerT: true,
+    recs: {
+      good: 'Murdepunkt ~6,5 t/ha. Toidunisu hind annab lisaboonuse.',
+      mid:  '6 t/ha juures ollakse nulli lähedal. Odra ja nisu vahel eelistage nisu.',
+      bad:  'Suvinisu vajab kõrget saagikust. Suured püsikulud teevad kasumi raskeks.'
+    }
+  },
+
+  hernes: {
+    name: 'Hernes / Uba',
+    yields: [2,3,4,5,6],
+    defaultSlider: 3, sliderMax: 6,
+    defaultPrice: 230, priceLabel: 'Hernes/uba hind (€/t)',
+    fuelLitres: 40, seedHa: 120,
+    // N fikseeritakse ise – ainult NPK P+K jaoks (P-driven sizing, K ka kaetud)
+    // 1t: P=4, K=10 – NPK sized by P
+    fertFn: (y, npk, nv) => {
+      const npkKg = (4/0.113)*y;  // P drives NPK; gives K=npkKg*0.216≈7.6/t (<10 – artikli lihtsustus)
+      return npkKg*(npk/1000);    // Axan 0 (lämmastik fikseeritakse)
+    },
+    chemFn: y => 95,  // herbitsiid 60 + putukatõrje 15 + fungitsiid 20
+    dryPerT: true, dryOverride: 40,  // artikkel: kuivatus 40€/t (mitte 20!)
+    recs: {
+      good: 'Uba on parem valik kui hernes. 5+ t/ha annab positiivse tulemuse.',
+      mid:  '4 t/ha annab positiivse brutotulemuse, aga püsikulud söövad.',
+      bad:  'Suurte püsikuludega on herne/oa kasvatus peaaegu kindlalt kahjumlik.'
+    }
+  },
+
+  taliraps: {
+    name: 'Taliraps',
+    yields: [1,2,3,3.5,4,5,6],
+    defaultSlider: 3.5, sliderMax: 6,
+    defaultPrice: 440, priceLabel: 'Taliraps hind 40% õlisus (€/t)',
+    // artikkel: EDK 0.6€/l × ~78l = 47€/ha; skaleerime kasutaja hinnaga
+    fuelLitres: 78, seedHa: 70,
+    // 1t: N=30 (uued hübriidid!), P=10, K=20 – K drives NPK → 93€/t @ art. hinnad
+    fertFn: (y, npk, nv) => {
+      const npkKg = (20/0.216)*y;
+      const axanKg = Math.max(0, (30*y - npkKg*0.10))/0.27;
+      return npkKg*(npk/1000) + axanKg*(nv/1000);
+    },
+    // boor + 2 kasvureg-fungitsiidi sügis + 2 fungitsiidi kevad + 2 herbitsiidi + 2 insektitsiidi
+    chemFn: y => 250,
+    dryPerT: true,
+    recs: {
+      good: '3 t/ha juures on kasum positiivne! Taliraps on praegu kõige tulusam kultuur.',
+      mid:  'Taliraps annab positiivse tulemuse juba 3 t/ha juures.',
+      bad:  'Alla 3 t/ha on kahjumlik, kuid hind kompenseerib palju.'
+    }
+  },
+
+  suviraps: {
+    name: 'Suviraps',
+    yields: [1,1.5,2,2.5,3,3.5],
+    defaultSlider: 2.5, sliderMax: 4,
+    defaultPrice: 440, priceLabel: 'Suviraps hind 40% õlisus (€/t)',
+    fuelLitres: 58, seedHa: 70,
+    // sama väetisestrateegia nagu talirapsil
+    fertFn: (y, npk, nv) => {
+      const npkKg = (20/0.216)*y;
+      const axanKg = Math.max(0, (30*y - npkKg*0.10))/0.27;
+      return npkKg*(npk/1000) + axanKg*(nv/1000);
+    },
+    // 2 herbitsiidi + 2 fungitsiidi/kasvureg + 4 insektitsiidi
+    chemFn: y => 158,
+    dryPerT: true,
+    recs: {
+      good: '2,5 t/ha annab napilt plussi. Potentsiaal on olemas, kuid risk on kõrge.',
+      mid:  'Suviraps on napp – iga kg loeb. Putukariski peab arvestama.',
+      bad:  'Alla 2,5 t/ha on kahjumlik. Insektitsiidideta on suviraps väga riskantne.'
+    }
+  }
+}
+// Price input overrides per crop
+const cropPriceInputs = {};
+
+// Current state
+let activeCrop = 'oder';
+let profitChart = null;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+function getInputs() {
+  return {
+    npk: +document.getElementById('inp_npk').value || 579,
+    nv:  +document.getElementById('inp_n').value   || 490,
+    fuelL: +document.getElementById('inp_fuel_l').value || 1.0,
+    fixed: +document.getElementById('inp_fixed').value || 500,
+    dry: +document.getElementById('inp_dry').value || 20,
+    trans: +document.getElementById('inp_trans').value || 10,
+  };
+}
+
+function getCropPrice(cropKey) {
+  const el = document.getElementById('crop_price_' + cropKey);
+  if (el) return +el.value;
+  return CROPS[cropKey].defaultPrice;
+}
+
+function computeRow(crop, y, inp) {
+  const c = CROPS[crop];
+  const price = getCropPrice(crop);
+  const fert = c.fertFn(y, inp.npk, inp.nv);
+  const chem = c.chemFn(y);
+  const seed = c.seedFn ? c.seedFn(y) : c.seedHa;
+  // fuelLitres = litres/ha; multiply by user's fuel price €/l
+  const fuel = c.fuelLitres * inp.fuelL;
+  const dryRate = (c.dryOverride !== undefined) ? c.dryOverride : inp.dry;
+  const drying = dryRate * y;
+  const transport = inp.trans * y;
+  const varCost = fert + chem + seed + fuel + drying + transport;
+  const totalCost = varCost + inp.fixed;
+  const revenue = y * price;
+  const bruto = revenue - varCost;
+  const neto = revenue - totalCost;
+  const breakeven = totalCost / price;
+  return { y, price, fert, chem, seed, fuel, drying, transport, varCost, totalCost, revenue, bruto, neto, breakeven };
+}
+
+function netoClass(v) {
+  if (v < 0) return 'neto-neg';
+  if (v < 150) return 'neto-warn';
+  return 'neto-pos';
+}
+
+// ─── Render table ─────────────────────────────────────────────────────────────
+
+function renderTable(cropKey, inp) {
+  const c = CROPS[cropKey];
+  document.getElementById('tableTitle').textContent = c.name;
+
+  const head = document.getElementById('tableHead');
+  head.innerHTML = `<tr>
+    <th>Saak t/ha</th>
+    <th>Müügitulu €/ha</th>
+    <th>Väetis €/ha</th>
+    <th>Taimekaitse €/ha</th>
+    <th>Seeme €/ha</th>
+    <th>Kütus €/ha</th>
+    <th>Kuivatus €/ha</th>
+    <th>Transport €/ha</th>
+    <th>Muutuvkulud €/ha</th>
+    <th>Brutokasum €/ha</th>
+    <th>Püsikulud €/ha</th>
+    <th>Netokasum €/ha</th>
+  </tr>`;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  for (const y of c.yields) {
+    const r = computeRow(cropKey, y, inp);
+    const cls = netoClass(r.neto);
+    tbody.innerHTML += `<tr>
+      <td>${y}</td>
+      <td>${r.revenue.toFixed(0)}</td>
+      <td>${r.fert.toFixed(0)}</td>
+      <td>${r.chem.toFixed(0)}</td>
+      <td>${r.seed}</td>
+      <td>${r.fuel.toFixed(0)}</td>
+      <td>${r.drying.toFixed(0)}</td>
+      <td>${r.transport.toFixed(0)}</td>
+      <td>${r.varCost.toFixed(0)}</td>
+      <td>${r.bruto.toFixed(0)}</td>
+      <td>${inp.fixed}</td>
+      <td class="${cls}">${r.neto > 0 ? '+' : ''}${r.neto.toFixed(0)}</td>
+    </tr>`;
+  }
+}
+
+// ─── Render chart ─────────────────────────────────────────────────────────────
+
+function renderChart(cropKey, inp) {
+  const c = CROPS[cropKey];
+  const min = c.yields[0];
+  const max = c.sliderMax;
+  const labels = [], profits = [];
+  for (let y = min; y <= max; y += 0.2) {
+    const r = computeRow(cropKey, y, inp);
+    labels.push(y.toFixed(1));
+    profits.push(+r.neto.toFixed(0));
+  }
+
+  // Replace canvas element to avoid Chart.js reuse issues
+  const wrap = document.getElementById('chartWrap');
+  wrap.innerHTML = '<canvas id="profitChart" style="width:100%;height:100%"></canvas>';
+  const ctx = document.getElementById('profitChart').getContext('2d');
+  profitChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Netokasum €/ha',
+        data: profits,
+        borderColor: '#5dbe7a',
+        backgroundColor: 'rgba(93,190,122,0.08)',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.3
+      }, {
+        label: 'Null',
+        data: labels.map(() => 0),
+        borderColor: 'rgba(255,255,255,0.15)',
+        borderWidth: 1,
+        borderDash: [4,4],
+        pointRadius: 0,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.raw > 0 ? '+' : ''}${ctx.raw} €/ha`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#7a8c7e', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 10 },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          ticks: { color: '#7a8c7e', font: { family: 'DM Mono', size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.07)' },
+          beginAtZero: false
+        }
+      }
+    }
+  });
+}
+
+// ─── Render right panel ───────────────────────────────────────────────────────
+
+function renderPanel(cropKey, inp) {
+  const c = CROPS[cropKey];
+  const y = +document.getElementById('yieldSlider').value;
+  document.getElementById('yieldDisplay').textContent = y.toFixed(1) + ' t/ha';
+
+  const r = computeRow(cropKey, y, inp);
+  const cls = netoClass(r.neto);
+
+  const profEl = document.getElementById('profitDisplay');
+  profEl.className = 'profit-big ' + (r.neto < 0 ? 'neto-neg' : r.neto < 150 ? 'neto-warn' : 'neto-pos');
+  profEl.textContent = (r.neto > 0 ? '+' : '') + r.neto.toFixed(0) + ' €/ha';
+
+  document.getElementById('beVal').textContent = r.breakeven.toFixed(2) + ' t/ha';
+
+  // Breakdown
+  document.getElementById('breakdown').innerHTML = `
+    <div class="bline revenue">
+      <span class="bline-label">Müügitulu (${y}×${r.price})</span>
+      <span class="bline-val">${r.revenue.toFixed(0)} €/ha</span>
+    </div>
+    <div style="height:6px"></div>
+    <div class="bline"><span class="bline-label">Väetis</span><span class="bline-val">${r.fert.toFixed(0)} €/ha</span></div>
+    <div class="bline"><span class="bline-label">Taimekaitse</span><span class="bline-val">${r.chem.toFixed(0)} €/ha</span></div>
+    <div class="bline"><span class="bline-label">Seeme</span><span class="bline-val">${r.seed} €/ha</span></div>
+    <div class="bline"><span class="bline-label">Kütus</span><span class="bline-val">${r.fuel.toFixed(0)} €/ha</span></div>
+    <div class="bline"><span class="bline-label">Kuivatus</span><span class="bline-val">${r.drying.toFixed(0)} €/ha</span></div>
+    <div class="bline"><span class="bline-label">Transport</span><span class="bline-val">${r.transport.toFixed(0)} €/ha</span></div>
+    <div class="bline total"><span class="bline-label">Muutuvkulud</span><span class="bline-val">${r.varCost.toFixed(0)} €/ha</span></div>
+    <div class="bline total"><span class="bline-label">Püsikulud</span><span class="bline-val">${inp.fixed} €/ha</span></div>
+    <div class="bline total"><span class="bline-label">Kogukulu</span><span class="bline-val">${r.totalCost.toFixed(0)} €/ha</span></div>
+  `;
+
+  // Recommendation
+  const recs = c.recs;
+  let recText, recCls;
+  if (r.neto >= 150) { recText = recs.good; recCls = ''; }
+  else if (r.neto >= -50) { recText = recs.mid; recCls = 'warn'; }
+  else { recText = recs.bad; recCls = 'bad'; }
+  const recEl = document.getElementById('recBox');
+  recEl.textContent = recText;
+  recEl.className = 'rec-box ' + recCls;
+}
+
+// ─── Slider sync ──────────────────────────────────────────────────────────────
+
+function syncSlider(cropKey) {
+  const c = CROPS[cropKey];
+  const slider = document.getElementById('yieldSlider');
+  slider.min = c.yields[0];
+  slider.max = c.sliderMax;
+  slider.step = c.yields[0] < 2 ? 0.1 : 0.1;
+  slider.value = c.defaultSlider;
+}
+
+// ─── Crop price input injection ───────────────────────────────────────────────
+
+function ensureCropPriceInput(cropKey) {
+  // Inject or update crop-specific price in inputsGrid
+  const existing = document.getElementById('crop_price_wrap_' + cropKey);
+  if (!existing) {
+    const c = CROPS[cropKey];
+    const wrap = document.createElement('div');
+    wrap.className = 'input-group';
+    wrap.id = 'crop_price_wrap_' + cropKey;
+    wrap.style.display = 'none';
+    wrap.innerHTML = `<label>${c.priceLabel}</label><input type="number" id="crop_price_${cropKey}" value="${c.defaultPrice}" step="1">`;
+    document.getElementById('inputsGrid').appendChild(wrap);
+    document.getElementById('crop_price_' + cropKey).addEventListener('input', updateAll);
+  }
+}
+
+function showCropPriceInput(cropKey) {
+  // Hide all crop price inputs
+  Object.keys(CROPS).forEach(k => {
+    const el = document.getElementById('crop_price_wrap_' + k);
+    if (el) el.style.display = 'none';
+  });
+  // Show this one
+  const el = document.getElementById('crop_price_wrap_' + cropKey);
+  if (el) el.style.display = '';
+}
+
+// ─── Main update ──────────────────────────────────────────────────────────────
+
+function updateAll() {
+  const inp = getInputs();
+  renderTable(activeCrop, inp);
+  renderChart(activeCrop, inp);
+  renderPanel(activeCrop, inp);
+}
+
+window.__initApp = function() {
+// ─── Init ─────────────────────────────────────────────────────────────────────
+// Pre-create all crop price inputs
+Object.keys(CROPS).forEach(k => ensureCropPriceInput(k));
+showCropPriceInput('oder');
+
+// Crop tab clicks
+document.querySelectorAll('.crop-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.crop-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCrop = btn.dataset.crop;
+    syncSlider(activeCrop);
+    showCropPriceInput(activeCrop);
+    updateAll();
+  });
+});
+
+// Slider
+document.getElementById('yieldSlider').addEventListener('input', () => {
+  const inp = getInputs();
+  renderPanel(activeCrop, inp);
+});
+
+// All inputs
+document.querySelectorAll('#inputsGrid input').forEach(el => {
+  el.addEventListener('input', updateAll);
+});
+
+// Initial render
+syncSlider('oder');
+updateAll();
+};
+// If Chart.js already loaded (cached), run immediately
+if (window.Chart) { window.__initApp(); }
+
+</script>
+</body>
+</html>
