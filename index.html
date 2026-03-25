@@ -838,6 +838,8 @@ function renderPanel(cropKey, inp) {
   profEl.className = 'profit-big ' + (r.neto < 0 ? 'neto-neg' : r.neto < 150 ? 'neto-warn' : 'neto-pos');
   profEl.textContent = (r.neto > 0 ? '+' : '') + r.neto.toFixed(0) + ' €/ha';
 
+  const profUnit = document.getElementById('profitUnit');
+  profUnit.textContent = inp.support > 0 ? '€/ha (neto, koos toetustega)' : '€/ha (neto, ilma toetusteta)';
   document.getElementById('beVal').textContent = r.breakeven.toFixed(2) + ' t/ha';
   document.getElementById('beValPrice').textContent = r.priceBreakeven !== null ? r.priceBreakeven.toFixed(1) + ' €/t' : '–';
 
