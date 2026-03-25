@@ -435,6 +435,7 @@ input[type=range]::-webkit-slider-thumb {
     <button class="crop-tab active" data-crop="oder">Suvioder</button>
     <button class="crop-tab" data-crop="kaer">Kaer</button>
     <button class="crop-tab" data-crop="suvinisu">Suvinisu</button>
+    <button class="crop-tab" data-crop="talinisu">Talinisu</button>
     <button class="crop-tab" data-crop="hernes">Hernes / Uba</button>
     <button class="crop-tab" data-crop="taliraps">Taliraps</button>
     <button class="crop-tab" data-crop="suviraps">Suviraps</button>
@@ -452,8 +453,8 @@ input[type=range]::-webkit-slider-thumb {
             <label>NPK 10-26-26 (€/t)</label>
             <span class="slider-cur" id="disp_npk">579</span>
           </div>
-          <input type="range" id="inp_npk" min="300" max="900" step="1" value="579">
-          <div class="slider-range"><span>300</span><span>900</span></div>
+          <input type="range" id="inp_npk" min="0" max="100" step="1" value="47">
+          <div class="slider-range"><span>0 (ei kasuta)</span><span>900</span></div>
         </div>
 
         <div class="input-group slider-group">
@@ -461,8 +462,8 @@ input[type=range]::-webkit-slider-thumb {
             <label>N-väetis YaraBela/N27 (€/t)</label>
             <span class="slider-cur" id="disp_n">490</span>
           </div>
-          <input type="range" id="inp_n" min="200" max="800" step="1" value="490">
-          <div class="slider-range"><span>200</span><span>800</span></div>
+          <input type="range" id="inp_n" min="0" max="100" step="1" value="49">
+          <div class="slider-range"><span>0 (ei kasuta)</span><span>800</span></div>
         </div>
 
         <div class="input-group slider-group">
@@ -623,6 +624,33 @@ const CROPS = {
     }
   },
 
+  talinisu: {
+    name: 'Talinisu',
+    yields: [1,2,3,4,5,6,7,8],
+    defaultSlider: 5, sliderMax: 8,
+    defaultPrice: 190, priceLabel: 'Talinisu hind (€/t)',
+    fuelLitres: 35, seedHa: 100,
+    // 1t: N=25, P=5, K=12 – P drives NPK; N27+4S for top-dress
+    fertFn: (y, npk, nv) => {
+      const npkKg = (5/0.1134)*y;
+      const axanKg = Math.max(0, (25*y - npkKg*0.10))/0.27;
+      return npkKg*(npk/1000) + axanKg*(nv/1000);
+    },
+    // TKV: herbitsiid + fungitsiidid saagiootuse järgi
+    chemFn: y => {
+      if (y <= 2) return 30;           // herbitsiid
+      if (y <= 4) return 41;           // herbitsiid + 1 fungitsiid
+      if (y <= 6) return 90;           // herbitsiid + 2 fungitsiidi
+      return 125;                      // herbitsiid + 3 fungitsiidi
+    },
+    dryPerT: true,
+    recs: {
+      good: 'Murdepunkt ~7 t/ha. III kategooria toidunisu. Hea marginaal kõrge saagi korral.',
+      mid:  '5–6 t/ha juures ollakse nulli lähedal. Iga lisatünn loeb.',
+      bad:  'Alla 4 t/ha on kahjumlik. Talvitumine ja haigusrisk on peamine oht.'
+    }
+  },
+
   hernes: {
     name: 'Hernes / Uba',
     yields: [2,3,4,5,6],
@@ -698,10 +726,23 @@ let profitChart = null;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
+// NPK slider: 0 = ei kasuta, 1-100 = 300-900 €/t
+function npkSliderToPrice(v) {
+  v = +v;
+  if (v === 0) return 0;
+  return Math.round(300 + (v - 1) * (600 / 99));
+}
+
+function nvSliderToPrice(v) {
+  v = +v;
+  if (v === 0) return 0;
+  return Math.round(200 + (v - 1) * (600 / 99));
+}
+
 function getInputs() {
   return {
-    npk: +document.getElementById('inp_npk').value || 579,
-    nv:  +document.getElementById('inp_n').value   || 490,
+    npk: npkSliderToPrice(document.getElementById('inp_npk').value),
+    nv:  nvSliderToPrice(document.getElementById('inp_n').value),
     fuelL: +document.getElementById('inp_fuel_l').value || 1.0,
     fixed: +document.getElementById('inp_fixed').value || 500,
     dry: +document.getElementById('inp_dry').value || 20,
@@ -723,7 +764,7 @@ function computeRow(crop, y, inp) {
   const chem = c.chemFn(y);
   const seed = c.seedFn ? c.seedFn(y) : c.seedHa;
   // fuelLitres = litres/ha; multiply by user's fuel price €/l
-  const fuel = c.fuelLitres * inp.fuelL;
+  const fuel = c.fuelFixed !== undefined ? c.fuelFixed : c.fuelLitres * inp.fuelL;
   const dryRate = inp.dry * (c.dryMultiplier !== undefined ? c.dryMultiplier : 1.0);
   const drying = dryRate * y;
   const transport = inp.trans * y;
@@ -828,7 +869,7 @@ function updateYieldLine() {
 
 function renderChart(cropKey, inp) {
   const c = CROPS[cropKey];
-  const min = c.yields[0];
+  const min = Math.max(c.yields[0], 1.5);
   const max = c.sliderMax;
   const labels = [], revenues = [], totalCosts = [];
   for (let y = min; y <= max; y += 0.1) {
@@ -913,8 +954,34 @@ function renderChart(cropKey, inp) {
 
 function renderPanel(cropKey, inp) {
   const c = CROPS[cropKey];
-  const y = +document.getElementById('yieldSlider').value;
-  document.getElementById('yieldDisplay').textContent = y.toFixed(1) + ' t/ha';
+  let y = +document.getElementById('yieldSlider').value;
+
+  // Snap: 0 stays 0, anything below 1.5 snaps to 1.5
+  if (y > 0 && y < 1.5) {
+    y = 1.5;
+    document.getElementById('yieldSlider').value = 1.5;
+  }
+
+  const isToetus = y === 0;
+  document.getElementById('yieldDisplay').textContent = isToetus ? 'võtan vaid toetuse' : y.toFixed(1) + ' t/ha';
+
+  if (isToetus) {
+    const profEl = document.getElementById('profitDisplay');
+    profEl.className = 'profit-big ' + (inp.support > 0 ? 'neto-warn' : 'neto-neg');
+    profEl.textContent = inp.support > 0 ? '+' + inp.support.toFixed(0) + ' €/ha' : '0 €/ha';
+    document.getElementById('profitUnit').textContent = '€/ha (ainult toetused, saaki pole)';
+    document.getElementById('beVal').textContent = '–';
+    document.getElementById('beValPrice').textContent = '–';
+    document.getElementById('breakdown').innerHTML = `
+      <div class="bline revenue"><span class="bline-label">Müügitulu</span><span class="bline-val">0 €/ha</span></div>
+      ${inp.support > 0 ? `<div class="bline"><span class="bline-label">Toetused</span><span class="bline-val">+${inp.support.toFixed(0)} €/ha</span></div>` : ''}
+      <div class="bline total"><span class="bline-label">Kogutulu</span><span class="bline-val">${inp.support.toFixed(0)} €/ha</span></div>
+    `;
+    const recEl = document.getElementById('recBox');
+    recEl.textContent = 'Põld on toetuse peal. Saaki pole, ainult otsetoetused laekuvad.';
+    recEl.className = 'rec-box warn';
+    return;
+  }
 
   const r = computeRow(cropKey, y, inp);
   const cls = netoClass(r.neto);
@@ -979,13 +1046,13 @@ function updateFuelHaDisplay() {
 function syncSlider(cropKey) {
   const c = CROPS[cropKey];
   const slider = document.getElementById('yieldSlider');
-  slider.min = c.yields[0];
+  slider.min = 0;
   slider.max = c.sliderMax;
   slider.step = 0.1;
   slider.value = c.defaultSlider;
   const mn = document.getElementById('yieldMin');
   const mx = document.getElementById('yieldMax');
-  if (mn) mn.textContent = c.yields[0];
+  if (mn) mn.textContent = 'toetus';
   if (mx) mx.textContent = c.sliderMax;
 }
 
@@ -1055,8 +1122,8 @@ document.getElementById('yieldSlider').addEventListener('input', () => {
 
 // Sync global slider displays
 const globalSliders = [
-  {id:'inp_npk', disp:'disp_npk', fmt: v => v},
-  {id:'inp_n',   disp:'disp_n',   fmt: v => v},
+  {id:'inp_npk', disp:'disp_npk', fmt: v => npkSliderToPrice(v) === 0 ? 'ei kasuta' : npkSliderToPrice(v)},
+  {id:'inp_n', disp:'disp_n', fmt: v => nvSliderToPrice(v) === 0 ? 'ei kasuta' : nvSliderToPrice(v)},
   {id:'inp_fuel_l', disp:'disp_fuel_l', fmt: v => (+v).toFixed(2), extra: v => {
     const fuelHa = document.getElementById('disp_fuel_ha');
     if (fuelHa) fuelHa.textContent = Math.round(CROPS[activeCrop].fuelLitres * +v) + ' €/ha';
