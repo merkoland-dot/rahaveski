@@ -481,7 +481,7 @@ input[type=range]::-webkit-slider-thumb {
     <!-- Right: väljundid + kulud — üks paneel -->
     <div>
       <div class="card">
-        <h3>Väljundid</h3>
+        <h3>Tulud / Kulud</h3>
         <div id="profitDisplay" class="profit-big good">–</div>
         <div id="profitUnit" style="font-size:0.75rem;color:var(--text-dim);font-family:'DM Mono',monospace;margin-bottom:12px">€/ha (neto, ilma toetusteta)</div>
         <div id="beDisplay" class="be-badge" style="margin-bottom:16px">Saagikus BE: <strong id="beVal">–</strong> &nbsp;|&nbsp; Hind BE: <strong id="beValPrice">–</strong></div>
@@ -743,6 +743,41 @@ function renderTable(cropKey, inp) {
 
 // ─── Render chart ─────────────────────────────────────────────────────────────
 
+// ─── Yield line plugin ────────────────────────────────────────────────────────
+const yieldLinePlugin = {
+  id: 'yieldLine',
+  afterDraw(chart) {
+    if (chart._yieldLineX === undefined) return;
+    const ctx2 = chart.ctx;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+    // labels are strings like "3.0", find index of closest
+    const target = chart._yieldLineX.toFixed(1);
+    const idx = chart.data.labels.indexOf(target);
+    if (idx < 0) return;
+    const x = xScale.getPixelForValue(idx);
+    ctx2.save();
+    ctx2.beginPath();
+    ctx2.moveTo(x, yScale.top);
+    ctx2.lineTo(x, yScale.bottom);
+    ctx2.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx2.lineWidth = 1.5;
+    ctx2.setLineDash([4, 3]);
+    ctx2.stroke();
+    ctx2.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx2.font = '10px Consolas';
+    ctx2.textAlign = 'center';
+    ctx2.fillText(target + ' t/ha', x, yScale.top - 4);
+    ctx2.restore();
+  }
+};
+
+function updateYieldLine() {
+  if (!profitChart) return;
+  profitChart._yieldLineX = +document.getElementById('yieldSlider').value;
+  profitChart.update('none');
+}
+
 function renderChart(cropKey, inp) {
   const c = CROPS[cropKey];
   const min = c.yields[0];
@@ -760,6 +795,7 @@ function renderChart(cropKey, inp) {
   const ctx = document.getElementById('profitChart').getContext('2d');
   profitChart = new Chart(ctx, {
     type: 'line',
+    plugins: [yieldLinePlugin],
     data: {
       labels,
       datasets: [
@@ -801,7 +837,7 @@ function renderChart(cropKey, inp) {
               const rev = items[0]?.raw ?? 0;
               const cost = items[1]?.raw ?? 0;
               const diff = rev - cost;
-              return [`────────────────`, `Netokasum: ${diff > 0 ? '+' : ''}${diff} €/ha`];
+              return ['────────────────', 'Netokasum: ' + (diff > 0 ? '+' : '') + diff + ' €/ha'];
             }
           }
         }
@@ -822,6 +858,7 @@ function renderChart(cropKey, inp) {
       }
     }
   });
+  profitChart._yieldLineX = +document.getElementById('yieldSlider').value;
 }
 
 // ─── Render right panel ───────────────────────────────────────────────────────
@@ -877,6 +914,13 @@ function renderPanel(cropKey, inp) {
 }
 
 // ─── Slider sync ──────────────────────────────────────────────────────────────
+
+function updateTransDisplay() {
+  const km = +document.getElementById('inp_trans').value || 100;
+  const eurT = (0.08 * km + 2.70).toFixed(2);
+  const el = document.getElementById('disp_trans_eur');
+  if (el) el.textContent = eurT + ' €/t';
+}
 
 function updateFuelHaDisplay() {
   const fuelL = +document.getElementById('inp_fuel_l').value;
@@ -957,6 +1001,7 @@ document.querySelectorAll('.crop-tab').forEach(btn => {
 // Slider
 document.getElementById('yieldSlider').addEventListener('input', () => {
   const inp = getInputs();
+  updateYieldLine();
   renderPanel(activeCrop, inp);
 });
 
@@ -971,9 +1016,9 @@ const globalSliders = [
   {id:'inp_fixed',  disp:'disp_fixed',  fmt: v => v},
   {id:'inp_dry',    disp:'disp_dry',    fmt: v => v},
   {id:'inp_trans', disp:'disp_trans', fmt: v => v, extra: v => {
-    const eur = (0.08 * +v + 2.70).toFixed(2);
+    const eurT = (0.08 * +v + 2.70).toFixed(2);
     const el = document.getElementById('disp_trans_eur');
-    if (el) el.textContent = eur + ' €/t';
+    if (el) el.textContent = eurT + ' €/t';
   }},
   {id:'inp_support',disp:'disp_support',fmt: v => v},
 ];
@@ -992,9 +1037,7 @@ globalSliders.forEach(({id, disp, fmt, extra}) => {
 // Initial render
 syncSlider('oder');
 updateFuelHaDisplay();
-// Init transport display
-const transEurEl = document.getElementById('disp_trans_eur');
-if (transEurEl) transEurEl.textContent = (0.08 * 100 + 2.70).toFixed(2) + ' €/t';
+updateTransDisplay();
 updateAll();
 };
 // If Chart.js already loaded (cached), run immediately
