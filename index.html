@@ -1,1163 +1,1613 @@
 <!DOCTYPE html>
-<html lang="et">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Farmer Tõnis – Kultuuride tasuvuskalkulaator 2026</title>
-<script>
-(function(){
-  function loadScript(src, onload, onerror){
-    var s = document.createElement('script');
-    s.src = src;
-    s.onload = onload;
-    s.onerror = onerror;
-    document.head.appendChild(s);
-  }
-  function tryFallback(){
-    loadScript(
-      'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js',
-      function(){ window.__chartJsReady = true; if(window.__initApp) window.__initApp(); },
-      function(){ document.getElementById('chartWrap').innerHTML = '<p style="color:#7a8c7e;padding:20px;font-size:0.8rem">Chart.js laadimine ebaõnnestus</p>'; }
-    );
-  }
-  loadScript(
-    'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
-    function(){ window.__chartJsReady = true; if(window.__initApp) window.__initApp(); },
-    tryFallback
-  );
-})();
-</script>
-
+<title>Sleeping Bag Finder v19 — adds Jack Wolfskin, Fjällräven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,30..100&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0e100f;
-  --surface: #161a17;
-  --surface2: #1e2520;
-  --border: #2a3028;
-  --green: #5dbe7a;
-  --green-dim: #2d5c3a;
-  --amber: #d4a017;
-  --red: #c0392b;
-  --text: #d8ddd6;
-  --text-dim: #7a8c7e;
-  --accent: #8fce6a;
+  /* Editorial earth-tone palette — trail journal aesthetic */
+  --bg-page: #f0ece3;          /* warm paper */
+  --bg-card: #fbf9f3;          /* lighter paper, raised */
+  --bg-secondary: #ebe6da;     /* soft tan */
+  --bg-tertiary: #ddd5c4;      /* deeper tan */
+  --ink-primary: #1a1f1a;      /* near-black with green undertone */
+  --ink-secondary: #4a544a;    /* forest gray */
+  --ink-tertiary: #7a8077;     /* moss */
+  --rule: rgba(26,31,26,0.12);
+  --rule-strong: rgba(26,31,26,0.28);
+  --accent: #c8552c;           /* trail blaze orange */
+  --accent-soft: #f5e1d6;      /* tinted orange bg */
+  --accent-deep: #8e3818;      /* darker burn */
+  --good: #2d7050;             /* deep moss green */
+  --good-soft: #d8ebe0;
+  --bad: #a93c2c;              /* rust red */
+  --bad-soft: #f3dcd6;
+  --info: #2a5d8f;             /* deep lake blue */
+  --info-soft: #d8e4f1;
+  --warn: #8a6018;             /* amber */
+  --warn-soft: #f0e3c8;
+  --highlight-bg: #faecd9;
+  --shadow-sm: 0 1px 2px rgba(26,31,26,0.04), 0 0 0 0.5px rgba(26,31,26,0.06);
+  --shadow-md: 0 2px 8px rgba(26,31,26,0.06), 0 0 0 0.5px rgba(26,31,26,0.06);
+  --shadow-lg: 0 6px 24px rgba(26,31,26,0.08), 0 0 0 0.5px rgba(26,31,26,0.08);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #15171a;
+    --bg-card: #1d2024;
+    --bg-secondary: #25282d;
+    --bg-tertiary: #2e3239;
+    --ink-primary: #e8e6df;
+    --ink-secondary: #b6b2a8;
+    --ink-tertiary: #807c72;
+    --rule: rgba(255,255,255,0.10);
+    --rule-strong: rgba(255,255,255,0.22);
+    --accent: #e0723f;
+    --accent-soft: #3a261c;
+    --accent-deep: #f0a37a;
+    --good: #5fb088;
+    --good-soft: #1a3328;
+    --bad: #d9694e;
+    --bad-soft: #3a2018;
+    --info: #6ba5d9;
+    --info-soft: #1a2d40;
+    --warn: #c89544;
+    --warn-soft: #3a2e18;
+    --highlight-bg: #3a2d18;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.35);
+    --shadow-lg: 0 6px 24px rgba(0,0,0,0.4);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
 body {
-  font-family: system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  padding: 0 0 60px;
+  font-family: var(--font-sans);
+  background: var(--bg-page);
+  color: var(--ink-primary);
+  font-size: 16px;
+  line-height: 1.55;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 24px 18px 48px;
+  /* Subtle paper grain */
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(26,31,26,0.012) 1px, transparent 1px),
+    radial-gradient(circle at 75% 70%, rgba(26,31,26,0.008) 1px, transparent 1px);
+  background-size: 4px 4px, 7px 7px;
 }
-
-/* Header */
-.header {
-  border-bottom: 1px solid var(--border);
-  padding: 28px 40px 24px;
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.header h1 {
-  font-family: Georgia, serif;
-  font-size: 2rem;
-  color: var(--accent);
-  letter-spacing: -0.02em;
-}
-.header span {
-  font-family: Consolas, monospace;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-}
-
-.main {
-  max-width: 1280px;
+.container {
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 32px 40px 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 36px 36px 32px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+@media (max-width: 720px) {
+  body { padding: 12px 8px 32px; font-size: 15px; }
+  .container { padding: 22px 18px; border-radius: var(--radius-lg); }
 }
 
-/* Input row */
-.top-panels > div {
-  display: flex;
-  flex-direction: column;
+/* Editorial header */
+.f9-masthead { margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1.5px solid var(--rule); }
+.f9-eyebrow {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent); font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
 }
-.top-panels > div > .inputs-grid,
-.top-panels > div > div,
-.top-panels > div > .card {
-  flex: 1;
+.f9-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5.5vw, 52px);
+  font-weight: 400;
+  font-variation-settings: 'opsz' 100, 'SOFT' 30;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  margin: 0 0 14px;
+  color: var(--ink-primary);
 }
-.inputs-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
+h1 em { font-style: italic; font-variation-settings: 'opsz' 100, 'SOFT' 80; color: var(--accent); }
+.subtitle {
+  font-size: 15px; line-height: 1.6;
+  color: var(--ink-secondary); max-width: 78ch; margin: 0;
 }
+.subtitle b { color: var(--ink-primary); font-weight: 500; }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.input-group label {
-  font-family: Consolas, monospace;
-  font-size: 0.68rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.input-group input[type=number] {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-family: Consolas, monospace;
-  font-size: 0.9rem;
-  padding: 8px 10px;
-  width: 100%;
-  transition: border-color 0.15s;
-}
-.input-group input[type=number]:focus {
-  outline: none;
-  border-color: var(--green);
-}
+.f9 { font-size: 16px; max-width: 100%; }
+.f9 * { box-sizing: border-box; }
 
-/* Slider input groups */
-.input-group.slider-group {
-  gap: 4px;
+/* Profile presets — feel like editorial section dividers */
+.f9-presets {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px; margin-bottom: 18px;
+  padding: 16px 18px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--rule);
 }
-.input-group.slider-group .slider-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-.input-group.slider-group .slider-cur {
-  font-family: Consolas, monospace;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 60px;
-  text-align: right;
-}
-.input-group.slider-group .slider-range {
-  display: flex;
-  justify-content: space-between;
-  font-family: Consolas, monospace;
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  margin-top: 2px;
-}
-.inputs-note {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  margin-top: -16px;
-  margin-bottom: 20px;
-  padding-left: 2px;
-}
-
-/* Crop tabs */
-.crop-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-.crop-tab {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: system-ui, sans-serif;
-}
-.crop-tab:hover { border-color: var(--green-dim); color: var(--text); }
-.crop-tab.active {
-  background: var(--green-dim);
-  border-color: var(--green);
-  color: var(--accent);
-  font-weight: 600;
-}
-
-/* Layout */
-.top-panels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-  align-items: stretch;
-}
-.chart-full {
-  width: 100%;
-}
-
-@media (max-width: 900px) {
-  .top-panels {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .top-panels > div {
-    min-height: unset;
-  }
-}
-
-@media (max-width: 600px) {
-  .header {
-    padding: 16px;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .header h1 {
-    font-size: 1.3rem;
-  }
-  .main {
-    padding: 16px 12px 0;
-  }
-  .crop-tabs {
-    gap: 4px;
-  }
-  .crop-tab {
-    padding: 6px 10px;
-    font-size: 0.78rem;
-  }
-  .card {
-    padding: 14px;
-  }
-  .inputs-grid {
-    padding: 14px;
-  }
-  .profit-big {
-    font-size: 2rem;
-  }
-  .be-badge {
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.72rem;
-  }
-  .chart-wrap {
-    height: 220px !important;
-  }
-  table {
-    font-size: 0.7rem;
-  }
-  thead th, tbody td {
-    padding: 6px 8px;
-  }
-}
-
-/* Table */
-.table-wrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.table-wrap h2 {
-  font-family: Georgia, serif;
-  font-size: 1.1rem;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: Consolas, monospace;
-  font-size: 0.78rem;
-}
-thead th {
-  background: var(--surface2);
-  color: var(--text-dim);
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 8px 12px;
-  text-align: right;
-  white-space: nowrap;
-}
-thead th:first-child { text-align: left; }
-
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.1s;
-}
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(--surface2); }
-
-tbody td {
-  padding: 9px 12px;
-  text-align: right;
-  color: var(--text-dim);
-}
-tbody td:first-child { text-align: left; color: var(--text); font-weight: 500; }
-
-.neto-pos { color: var(--green); font-weight: 600; }
-.neto-neg { color: var(--red); }
-.neto-warn { color: var(--amber); }
-
-/* Right panel */
-.right-panel { display: flex; flex-direction: column; gap: 16px; }
-
-/* Yield slider card */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-}
-.card h3 {
-  font-family: Georgia, serif;
-  font-size: 1rem;
-  margin-bottom: 14px;
-  color: var(--text);
-}
-
-.profit-big {
-  font-family: Georgia, serif;
-  font-size: 2.8rem;
-  line-height: 1;
+.f9-presets-lbl {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-tertiary); font-weight: 500;
   margin-bottom: 4px;
 }
+.f9-preset {
+  font-family: var(--font-sans);
+  font-size: 14px; padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--rule);
+  background: var(--bg-card);
+  cursor: pointer; color: var(--ink-primary);
+  text-align: left; display: flex; flex-direction: column;
+  gap: 2px; min-width: 0;
+  transition: all 0.15s ease;
+}
+.f9-preset:hover { border-color: var(--rule-strong); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.f9-preset[aria-pressed="true"] {
+  background: var(--accent-soft); border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.f9-preset b {
+  font-family: var(--font-display); font-size: 16px; font-weight: 500;
+  font-variation-settings: 'opsz' 144;
+  color: var(--ink-primary); line-height: 1.1;
+}
+.f9-preset[aria-pressed="true"] b { color: var(--accent-deep); }
+@media (prefers-color-scheme: dark) {
+  .f9-preset[aria-pressed="true"] b { color: var(--accent-deep); }
+}
+.f9-preset span { font-size: 12px; color: var(--ink-secondary); line-height: 1.35; }
 
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* Active filter tags */
+.f9-active { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 0; }
+.f9-active-tag {
+  font-size: 13px; font-weight: 500;
+  padding: 5px 12px 5px 14px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-deep);
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; border: 1px solid transparent;
+  font-family: inherit; transition: all 0.12s;
+}
+.f9-active-tag::after { content: '×'; font-size: 16px; line-height: 1; opacity: 0.7; }
+.f9-active-tag:hover { background: var(--accent); color: white; }
+.f9-active-tag:hover::after { opacity: 1; }
+
+/* Filter controls */
+.f9-controls {
+  background: var(--bg-secondary);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.f9-ctrl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.f9-grp { min-width: 0; }
+.f9-lbl { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.f9-lbl-name {
+  color: var(--ink-primary); font-weight: 600; font-size: 13px;
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.f9-lbl-val {
+  color: var(--ink-secondary); font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+}
+
+/* Sliders — bigger, more refined */
+.f9-track { position: relative; height: 36px; display: flex; align-items: center; touch-action: none; }
+.f9-rail {
+  position: absolute; left: 0; right: 0; height: 6px;
+  background: var(--bg-tertiary); border-radius: 3px;
+  pointer-events: none;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+}
+.f9-fill {
+  position: absolute; height: 6px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-deep));
+  border-radius: 3px; pointer-events: none; z-index: 1;
+}
+.f9-track input[type=range] {
+  position: absolute; left: 0; right: 0; width: 100%; height: 36px;
+  background: transparent; -webkit-appearance: none; appearance: none;
+  margin: 0; padding: 0; pointer-events: none; z-index: 2;
+}
+.f9-track input[type=range]:nth-of-type(1) { z-index: 3; }
+.f9-track input[type=range]:nth-of-type(2) { z-index: 4; }
+.f9-track input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 36px; border: none; }
+.f9-track input[type=range]::-moz-range-track { background: transparent; height: 36px; border: none; }
+.f9-track input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg-card); border: 2.5px solid var(--accent);
+  cursor: grab; box-shadow: 0 2px 6px rgba(26,31,26,0.18);
+  transition: transform 0.1s, border-color 0.1s;
+}
+.f9-track input[type=range]::-moz-range-thumb {
+  pointer-events: auto; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg-card); border: 2.5px solid var(--accent);
+  cursor: grab; box-shadow: 0 2px 6px rgba(26,31,26,0.18);
+  transition: transform 0.1s, border-color 0.1s;
+}
+.f9-track input[type=range]:active::-webkit-slider-thumb { cursor: grabbing; border-color: var(--accent-deep); transform: scale(1.15); }
+.f9-track input[type=range]:active::-moz-range-thumb { cursor: grabbing; border-color: var(--accent-deep); transform: scale(1.15); }
+.f9-track input[type=range]:focus { outline: none; }
+.f9-track input[type=range]:focus::-webkit-slider-thumb { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+.f9-track input[type=range]:focus::-moz-range-thumb { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+
+/* Chips & rows */
+.f9-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.f9-chip {
+  font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--bg-card); cursor: pointer;
+  color: var(--ink-secondary); font-family: inherit;
+  transition: all 0.12s;
+}
+.f9-chip:hover { border-color: var(--rule-strong); color: var(--ink-primary); }
+.f9-chip[aria-pressed="true"] {
+  background: var(--ink-primary); color: var(--bg-card);
+  border-color: var(--ink-primary);
+}
+
+/* Currency segmented */
+.f9-curr {
+  display: inline-flex; border-radius: 999px;
+  border: 1px solid var(--rule); overflow: hidden;
+  background: var(--bg-card);
+}
+.f9-curr button {
+  font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border: none; background: transparent;
+  color: var(--ink-secondary); cursor: pointer;
+  border-right: 1px solid var(--rule); font-family: inherit;
+  transition: all 0.12s;
+}
+.f9-curr button:last-child { border-right: none; }
+.f9-curr button[aria-pressed="true"] { background: var(--ink-primary); color: var(--bg-card); }
+
+/* Charts */
+.f9-charts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px; margin-bottom: 18px;
+}
+.f9-chartbox {
+  background: var(--bg-card); border: 1px solid var(--rule);
+  border-radius: var(--radius-lg); padding: 14px 16px 12px;
+  box-shadow: var(--shadow-sm);
+}
+.f9-chartttl {
+  font-size: 13px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.f9-chartttl b {
+  font-family: var(--font-display); font-size: 17px; font-weight: 500;
+  font-variation-settings: 'opsz' 144;
+  color: var(--ink-primary); letter-spacing: -0.01em;
+}
+.f9-chartttl span { color: var(--ink-tertiary); font-size: 12px; font-family: var(--font-mono); }
+.f9-chartwrap { position: relative; width: 100%; height: 220px; cursor: crosshair; }
+
+/* Toolbar */
+.f9-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  padding: 12px 16px; background: var(--bg-secondary); border-radius: var(--radius-md);
+  border: 1px solid var(--rule);
+}
+.f9-count {
+  font-size: 14px; color: var(--ink-secondary);
+  font-family: var(--font-mono); font-weight: 500;
+}
+.f9-count b {
+  color: var(--ink-primary); font-family: var(--font-display);
+  font-size: 22px; font-weight: 500; font-variation-settings: 'opsz' 144;
+  margin-right: 2px;
+}
+.f9-toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.f9-share {
+  font-size: 13px; padding: 6px 12px;
+  border-radius: var(--radius-md); border: 1px solid var(--rule);
+  background: var(--bg-card); color: var(--ink-secondary);
+  cursor: pointer; font-family: inherit; font-weight: 500;
+  transition: all 0.12s;
+}
+.f9-share:hover { border-color: var(--rule-strong); color: var(--ink-primary); }
+.f9-sort select {
+  font-size: 13px; padding: 6px 12px;
+  border-radius: var(--radius-md); border: 1px solid var(--rule);
+  background: var(--bg-card); color: var(--ink-primary);
+  cursor: pointer; font-family: inherit; font-weight: 500;
+}
+
+/* CARDS — the editorial centerpiece */
+.f9-card {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
   margin-bottom: 12px;
+  display: grid; grid-template-columns: auto 1fr; gap: 18px;
+  align-items: start;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  position: relative;
 }
-.slider-label {
-  font-family: Consolas, monospace;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  white-space: nowrap;
+.f9-card:hover {
+  border-color: var(--rule-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
-.slider-val {
-  font-family: Consolas, monospace;
-  font-size: 0.9rem;
-  color: var(--accent);
-  min-width: 52px;
-  text-align: right;
+.f9-card.compared {
+  border-color: var(--info); background: var(--info-soft);
+  box-shadow: 0 0 0 1px var(--info);
 }
-
-input[type=range] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
+.f9-card.highlighted {
+  border-color: var(--accent); background: var(--highlight-bg);
+  animation: f9flash 1.4s ease-out;
 }
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  background: var(--accent);
-  cursor: pointer;
-  border: 2px solid var(--bg);
+@keyframes f9flash {
+  0% { background: var(--accent-soft); }
+  100% { background: var(--highlight-bg); }
 }
 
-/* Cost breakdown */
-.breakdown { display: flex; flex-direction: column; gap: 6px; }
-.bline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-  padding: 3px 0;
+.f9-checkcol {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding-top: 4px; min-width: 32px;
 }
-.bline-label { color: var(--text-dim); }
-.bline-val { font-family: Consolas, monospace; color: var(--text); }
-.bline.total {
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-  padding-top: 8px;
-  font-weight: 600;
+.f9-rank {
+  font-family: var(--font-display);
+  font-size: 26px; font-weight: 400;
+  font-variation-settings: 'opsz' 144;
+  color: var(--ink-tertiary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1; letter-spacing: -0.04em;
 }
-.bline.total .bline-label { color: var(--text); }
-.bline.revenue .bline-val { color: var(--accent); }
-
-/* Chart */
-.chart-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
-
-/* Breakeven badge */
-.be-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 10px;
-  font-family: Consolas, monospace;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  margin-top: 8px;
+.f9-check {
+  width: 22px; height: 22px;
+  border-radius: 5px; border: 1.5px solid var(--rule-strong);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-card); flex-shrink: 0;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  transition: all 0.12s;
 }
-.be-badge strong { color: var(--text); }
-
-/* Recommendation */
-.rec-box {
-  background: var(--surface2);
-  border-left: 3px solid var(--green-dim);
-  border-radius: 0 8px 8px 0;
-  padding: 12px 14px;
-  font-size: 0.82rem;
-  line-height: 1.5;
-  color: var(--text-dim);
+.f9-check:hover { border-color: var(--info); }
+.f9-check[aria-pressed="true"] {
+  background: var(--info); border-color: var(--info); color: white;
 }
-.rec-box.warn { border-left-color: var(--amber); }
-.rec-box.bad { border-left-color: var(--red); }
 
+.f9-cardbody { flex: 1; min-width: 0; }
+.f9-maininfo { min-width: 0; }
+.f9-head {
+  display: flex; justify-content: space-between; gap: 16px;
+  align-items: flex-start; flex-wrap: wrap;
+  padding-bottom: 14px; border-bottom: 1px solid var(--rule);
+  margin-bottom: 14px;
+}
+.f9-name {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 500;
+  font-variation-settings: 'opsz' 144;
+  letter-spacing: -0.015em; line-height: 1.2;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  color: var(--ink-primary);
+}
+.f9-score-pill {
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 600;
+  background: var(--bg-secondary); color: var(--ink-secondary);
+  padding: 3px 10px; border-radius: 999px;
+  font-variant-numeric: tabular-nums; cursor: help;
+  position: relative; letter-spacing: 0.02em;
+  border: 1px solid var(--rule);
+}
+.f9-score-pill.high { background: var(--good-soft); color: var(--good); border-color: var(--good); }
+.f9-score-pill.mid { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+.f9-tip {
+  position: absolute; bottom: calc(100% + 8px); right: 0;
+  background: var(--ink-primary); color: var(--bg-card);
+  padding: 8px 12px; border-radius: var(--radius-sm);
+  font-size: 11px; font-family: var(--font-mono); font-weight: 400;
+  white-space: pre; z-index: 100; pointer-events: none;
+  opacity: 0; transform: translateY(4px); transition: all 0.15s;
+  box-shadow: var(--shadow-md);
+}
+.f9-score-pill:hover .f9-tip { opacity: 1; transform: translateY(0); }
 
+.f9-bars { display: inline-flex; gap: 2px; align-items: center; margin-left: 4px; }
+.f9-bar {
+  width: 4px; height: 12px; border-radius: 1.5px;
+  background: var(--bg-tertiary);
+}
+.f9-bar.on { background: var(--good); }
+
+.f9-sub {
+  font-size: 14px; color: var(--ink-secondary);
+  margin-top: 4px; line-height: 1.5;
+}
+.f9-meta {
+  text-align: right; white-space: nowrap; flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  display: flex; flex-direction: column; gap: 4px;
+  align-items: flex-end;
+}
+.f9-meta b {
+  font-weight: 500; color: var(--ink-primary);
+  font-size: 28px; font-family: var(--font-display);
+  font-variation-settings: 'opsz' 144;
+  letter-spacing: -0.02em; line-height: 1;
+}
+.f9-meta span {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--ink-secondary); font-weight: 500;
+}
+.f9-meta .price-tag {
+  display: inline-block; padding: 4px 12px;
+  background: var(--ink-primary); color: var(--bg-card);
+  border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  margin-top: 4px; font-family: var(--font-mono);
+}
+
+/* Pros/cons — the headline takeaway */
+.f9-evidence-v12 { margin-top: 4px; }
+.f9-evhdr-v12 {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--ink-tertiary); text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 8px; display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; font-weight: 500;
+}
+.f9-evhdr-count {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  padding: 2px 9px; border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.f9-proscons {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-bottom: 14px;
+}
+@media (max-width: 600px) {
+  .f9-proscons { grid-template-columns: 1fr; gap: 10px; }
+}
+.f9-pros, .f9-cons {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 14px; border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+.f9-pros { border-left: 3px solid var(--good); }
+.f9-cons { border-left: 3px solid var(--bad); }
+.f9-pc-header {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 2px;
+}
+.f9-pros .f9-pc-header { color: var(--good); }
+.f9-cons .f9-pc-header { color: var(--bad); }
+.f9-pc-icon {
+  font-weight: 700; font-size: 15px; flex-shrink: 0;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.f9-pros .f9-pc-icon { background: var(--good); color: white; }
+.f9-cons .f9-pc-icon { background: var(--bad); color: white; }
+.f9-pc-list {
+  display: flex; flex-direction: column; gap: 5px;
+  flex: 1; min-width: 0;
+}
+.f9-pc-item {
+  font-size: 14px; line-height: 1.5;
+  color: var(--ink-primary); padding-left: 0;
+}
+.f9-cons .f9-pc-item { color: var(--ink-secondary); }
+
+/* Source pills */
+.f9-creds {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  margin-bottom: 4px;
+}
+.f9-cred {
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--bg-secondary); color: var(--ink-secondary);
+  border: 1px solid var(--rule);
+  cursor: help; transition: all 0.1s;
+}
+.f9-cred:hover { background: var(--bg-tertiary); color: var(--ink-primary); border-color: var(--rule-strong); }
+.f9-cred.ind { background: var(--good-soft); color: var(--good); border-color: rgba(45,112,80,0.2); }
+.f9-cred.mag { background: var(--info-soft); color: var(--info); border-color: rgba(42,93,143,0.2); }
+.f9-cred.blog { background: var(--bg-secondary); color: var(--ink-tertiary); }
+.f9-cred.eu {
+  background: transparent; color: var(--ink-secondary);
+  border: 1px dashed var(--rule-strong);
+}
+
+.f9-noevidence {
+  font-size: 13px; color: var(--ink-tertiary);
+  font-style: italic; padding: 8px 0;
+  border-top: 1px dashed var(--rule);
+}
+
+/* Shop ratings collapse */
+.f9-shop-toggle { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--rule); }
+.f9-shop-toggle summary {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--ink-tertiary);
+  cursor: pointer; padding: 4px 0;
+  display: flex; gap: 8px; align-items: center;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  list-style: none; font-weight: 500;
+}
+.f9-shop-toggle summary::-webkit-details-marker { display: none; }
+.f9-shop-toggle summary::before {
+  content: '▸'; color: var(--ink-tertiary);
+  transition: transform 0.15s; display: inline-block;
+}
+.f9-shop-toggle[open] summary::before { transform: rotate(90deg); }
+.f9-shop-toggle summary span:first-of-type { color: var(--ink-secondary); font-weight: 600; }
+.f9-shop-toggle summary:hover span:first-of-type { color: var(--ink-primary); }
+
+.f9-shop-stack { display: flex; flex-direction: column; gap: 8px; }
+.f9-shop-line {
+  display: grid;
+  grid-template-columns: 110px auto 1fr 60px;
+  gap: 10px; align-items: center;
+  font-size: 13px;
+}
+.f9-shop-line-name { color: var(--ink-secondary); font-weight: 500; }
+.f9-shop-line b {
+  font-family: var(--font-mono); font-weight: 600;
+  color: var(--ink-primary); font-size: 13px;
+}
+.f9-shop-bar {
+  position: relative; height: 8px;
+  background: var(--bg-secondary); border-radius: 4px;
+  overflow: hidden; cursor: help;
+}
+.f9-shop-bar-raw {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--bg-tertiary); border-radius: 4px;
+}
+.f9-shop-bar-wilson {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: linear-gradient(90deg, var(--info), var(--info));
+  border-radius: 4px;
+}
+.f9-shop-line-cnt {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--ink-tertiary); text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compare drawer */
+.f9-cmpdrawer {
+  position: sticky; bottom: 12px; z-index: 50;
+  background: var(--ink-primary); color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px; margin: 18px 0;
+  box-shadow: var(--shadow-lg);
+}
+.f9-cmpdrawer h3 {
+  font-family: var(--font-display); font-size: 18px; font-weight: 500;
+  margin: 0 0 10px; color: var(--bg-card);
+  font-variation-settings: 'opsz' 144;
+}
+.f9-cmptable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.f9-cmptable th {
+  text-align: left; padding: 6px 8px;
+  font-weight: 500; color: var(--ink-tertiary);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.f9-cmptable td {
+  padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.f9-cmptable td:first-child { font-family: var(--font-display); font-size: 14px; font-weight: 500; }
+
+/* Banner & disclaim */
+.f9-banner {
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-secondary));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 12px 16px; margin-bottom: 14px;
+  font-size: 14px; color: var(--ink-primary);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.f9-banner-icon {
+  font-size: 18px; flex-shrink: 0;
+}
+.f9-disclaim {
+  margin-top: 28px; padding: 22px 24px;
+  background: var(--bg-secondary); border-radius: var(--radius-lg);
+  border: 1px solid var(--rule);
+  font-size: 14px; line-height: 1.65; color: var(--ink-secondary);
+}
+.f9-disclaim b { color: var(--ink-primary); font-weight: 600; }
+
+/* Toast */
+.f9-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--ink-primary); color: var(--bg-card);
+  padding: 12px 22px; border-radius: 999px;
+  font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transition: all 0.25s; z-index: 200;
+  font-family: var(--font-sans);
+}
+.f9-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Empty state */
+.f9-empty {
+  text-align: center; padding: 56px 20px;
+  background: var(--bg-secondary); border-radius: var(--radius-lg);
+  border: 1px dashed var(--rule-strong);
+  font-family: var(--font-display); font-size: 20px;
+  color: var(--ink-tertiary); font-variation-settings: 'opsz' 144;
+}
+.f9-empty button {
+  margin-top: 16px; font-family: var(--font-sans);
+  font-size: 14px; padding: 8px 18px; border-radius: var(--radius-md);
+  border: 1px solid var(--rule-strong); background: var(--bg-card);
+  color: var(--ink-primary); cursor: pointer; font-weight: 500;
+}
+
+/* Hide old/redundant CSS not used in v16 */
+.f9-evidence, .f9-evcol, .f9-evhdr, .f9-edit-notes, .f9-edit-note-line { display: none !important; }
 </style>
 </head>
 <body>
+<div class="container">
+<header class="f9-masthead">
+  <div class="f9-eyebrow">A buyer's review · 102 bags · 30+ editorial sources</div>
+  <h1>The Sleeping Bag <em>Atlas</em></h1>
+  <p class="subtitle">A <b>review-aggregated decision tool</b> for serious gear research. Each bag is headlined by pros and cons synthesized from editorial reviews — Treeline Review, OutdoorGearLab, Switchback, CleverHiker, iRunFar, Outside, Outdoor Life, Backpacker, Live for the Outdoors, Outdoor Magazin (DE), Bergzeit, TGO, REI Expert Advice, GearJunkie, Outdoors Magic, Advnture, Ultralight Outdoor Gear UK, Active-Traveller, and more. Source pills back the claims; shop ratings stay collapsed unless you ask for them. <b>127 bags</b> — including Ferrino (Italy), Pajak (Poland), PHD (UK custom), Cumulus (Poland), Y by Nordisk / former Yeti (Germany), Mammut, Salewa, Vaude, Jack Wolfskin, and Fjällräven (Sweden, including the iconic Polar -30 used at the Fjällräven Polar event).</p>
+</header>
 
-<div class="header">
-  <h1>🌾 Põllumajanduslik rahaveski</h1>
-  <span>andmed: farmertonis.ee · meistrimees: tundmatu agrometeoroloog</span>
+<div class="f9">
+  <div class="f9-presets" role="group" aria-label="Profile presets">
+    <span class="f9-presets-lbl">Choose your priorities</span>
+    <button class="f9-preset" data-preset="balanced" aria-pressed="true"><b>Balanced</b><span>Even mix of all factors</span></button>
+    <button class="f9-preset" data-preset="thruhiker" aria-pressed="false"><b>Thru-hiker</b><span>Light and warm matter most</span></button>
+    <button class="f9-preset" data-preset="weekender" aria-pressed="false"><b>Weekend camper</b><span>Cheap and reliable</span></button>
+    <button class="f9-preset" data-preset="evidence" aria-pressed="false"><b>Evidence-driven</b><span>Trust labs and buyer data</span></button>
+  </div>
+
+  <div class="f9-active" id="f9Active"></div>
+
+  <div class="f9-controls">
+    <div class="f9-ctrl-grid">
+      <div class="f9-grp">
+        <div class="f9-lbl"><span class="f9-lbl-name">Currency</span>
+          <span class="f9-curr" role="group">
+            <button data-c="EUR" aria-pressed="true">€</button>
+            <button data-c="USD" aria-pressed="false">$</button>
+            <button data-c="GBP" aria-pressed="false">£</button>
+          </span>
+        </div>
+      </div>
+      <div class="f9-grp">
+        <div class="f9-lbl"><span class="f9-lbl-name">Budget</span><span class="f9-lbl-val" id="f9PriceVal">€20–€750</span></div>
+        <div class="f9-track" id="f9PriceTrack"><div class="f9-rail"></div><div class="f9-fill" id="f9PriceFill"></div>
+          <input type="range" id="f9PriceMin" min="20" max="750" step="5" value="20">
+          <input type="range" id="f9PriceMax" min="20" max="750" step="5" value="750">
+        </div>
+      </div>
+      <div class="f9-grp">
+        <div class="f9-lbl"><span class="f9-lbl-name">Comfort temperature</span><span class="f9-lbl-val" id="f9TempVal">-15 to +15 °C</span></div>
+        <div class="f9-track" id="f9TempTrack"><div class="f9-rail"></div><div class="f9-fill" id="f9TempFill"></div>
+          <input type="range" id="f9TempMin" min="-25" max="15" step="1" value="-15">
+          <input type="range" id="f9TempMax" min="-25" max="15" step="1" value="15">
+        </div>
+      </div>
+      <div class="f9-grp">
+        <div class="f9-lbl"><span class="f9-lbl-name">Maximum weight</span><span class="f9-lbl-val" id="f9WtVal">4500 g</span></div>
+        <div class="f9-track" id="f9WtTrack"><div class="f9-rail"></div><div class="f9-fill" id="f9WtFill" style="left:0"></div>
+          <input type="range" id="f9Wt" min="400" max="4500" step="50" value="4500">
+        </div>
+      </div>
+      <div class="f9-grp">
+        <div class="f9-lbl"><span class="f9-lbl-name">Bag type</span></div>
+        <div class="f9-row">
+          <button class="f9-chip" data-g="type" data-f="all" aria-pressed="true">All</button>
+          <button class="f9-chip" data-g="type" data-f="hooded" aria-pressed="false">Hooded</button>
+          <button class="f9-chip" data-g="type" data-f="hoodless" aria-pressed="false">Hoodless</button>
+          <button class="f9-chip" data-g="type" data-f="quilt" aria-pressed="false">Quilt</button>
+          <button class="f9-chip" data-g="type" data-f="double" aria-pressed="false">Double</button>
+        </div>
+      </div>
+      <div class="f9-grp">
+        <div class="f9-lbl"><span class="f9-lbl-name">Insulation</span></div>
+        <div class="f9-row">
+          <button class="f9-chip" data-g="ins" data-f="all" aria-pressed="true">Both</button>
+          <button class="f9-chip" data-g="ins" data-f="down" aria-pressed="false">Down</button>
+          <button class="f9-chip" data-g="ins" data-f="synthetic" aria-pressed="false">Synthetic</button>
+        </div>
+      </div>
+      <div class="f9-grp" style="grid-column:1/-1">
+        <div class="f9-lbl"><span class="f9-lbl-name">Minimum independent endorsements</span></div>
+        <div class="f9-row">
+          <button class="f9-chip" data-g="cons" data-f="0" aria-pressed="true">Any (incl. unknown brands)</button>
+          <button class="f9-chip" data-g="cons" data-f="1" aria-pressed="false">≥1 indie</button>
+          <button class="f9-chip" data-g="cons" data-f="2" aria-pressed="false">≥2 indie</button>
+          <button class="f9-chip" data-g="cons" data-f="3" aria-pressed="false">≥3 indie</button>
+          <button class="f9-chip" data-g="cons" data-f="ec" aria-pressed="false">Editor's pick</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="f9-secondhand-banner">
+    <b>Tip:</b> Used premium bags on eBay and Facebook Marketplace typically run 40–60% of MSRP. A €600 Feathered Friends Swallow goes for €250–350 used. Western Mountaineering bags hold value better — rarely under 60% — because WM doesn't allow retailer discounts.
+  </div>
+
+  <div id="f9CmpDrawer"></div>
+
+  <div class="f9-charts">
+    <div class="f9-chartbox">
+      <div class="f9-chartttl"><b>Price vs weight</b><span>Click dot to inspect</span></div>
+      <div class="f9-chartwrap"><canvas id="f9Chart1" role="img" aria-label="Scatter plot of price versus weight."></canvas></div>
+    </div>
+    <div class="f9-chartbox">
+      <div class="f9-chartttl"><b>Trust score vs price</b><span>Click dot to inspect</span></div>
+      <div class="f9-chartwrap"><canvas id="f9Chart2" role="img" aria-label="Trust score versus price."></canvas></div>
+    </div>
+    <div class="f9-chartbox">
+      <div class="f9-chartttl"><b>Value for money</b><span>Trust per 100<span id="f9Chart3CurSym">€</span> · trust ≥ 35</span></div>
+      <div class="f9-chartwrap"><canvas id="f9Chart3" role="img" aria-label="Value for money: trust score per money unit, ranked."></canvas></div>
+    </div>
+  </div>
+
+  <div class="f9-toolbar">
+    <div class="f9-count" id="f9Count"></div>
+    <div class="f9-toolbar-right">
+      <button class="f9-share" id="f9ToggleShop" title="Show shop ratings inline for all cards">📊 Shop ratings: collapsed</button>
+      <button class="f9-share" id="f9Share">Copy link</button>
+      <div class="f9-sort">
+        <select id="f9SortSel" aria-label="Sort">
+          <option value="score">Trust score</option>
+          <option value="indie">Indie endorsements</option>
+          <option value="shop">Wilson shop rating</option>
+          <option value="shopcount">Shop review count</option>
+          <option value="price">Price (low)</option>
+          <option value="weight">Weight (light)</option>
+          <option value="wpw">Warmth/gram</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="f9List"></div>
+
+  <div class="f9-disclaim">
+    <b style="color:var(--color-text-secondary)">How this works.</b> <b>Editorial reviews are the primary signal</b> — independent test labs (iRunFar, OutdoorGearLab, Switchback, CleverHiker, SectionHiker, Treeline Review, Wirecutter, Better Trail), magazines (TGO, T3, Backpacker, Outside Online, Outdoor Life, Live for the Outdoors, Outdoor Magazin DE, Bergzeit, Countryfile, Advnture, Scotsman, Outdoors Magic), and affiliate blogs (The Trek, GearJunkie, Summitborn, Backwoods Pursuit, Adventure Alan, Mountain Misadventures, BikeHikeSafari, TrailGroove). Each editorial source pill carries a tooltip with the reviewer's note when available; ★ marks an editor's-pick or award. <b>Shop ratings (Amazon/REI/Decathlon/Alpkit/Bergfreunde/etc.) are a secondary signal</b>, collapsed by default — toggle "Shop ratings: expanded" in the toolbar to show all inline, or click any individual ▸ to peek. Wilson 95% lower confidence bound shown alongside raw shop ratings (faint outer bar = raw, solid inner = Wilson) to penalize tiny samples.<br><br>
+    <b style="color:var(--color-text-secondary)">Why editorial first.</b> A 65-night structured test by a Treeline Review thru-hiker isn't comparable to 65 Amazon stars. Independent test labs purchase bags rather than receiving freebies, run controlled overnight tests across multiple seasons, and write up failure modes. Magazine reviews vary but at least involve a known reviewer. Shop ratings reflect buyer satisfaction at the price point they paid, often after a single use — useful but noisy. The architecture protects you from inverted incentives (a €50 Amazon bag with 4000 ratings can outrank a €600 Western Mountaineering bag with 200 ratings purely on review-count weight).<br><br>
+    <b style="color:var(--color-text-secondary)">Caveats.</b> Some popular budget bags (Vango, Snugpak, Naturehike, Coleman) are rarely covered by editorial review sites — they may show no editorial reviews despite hundreds of buyer ratings, which is a signal in itself. Naturehike's "800fp" claim is widely disputed by independent testers; treat as 650fp equivalent. Snugpak comfort ratings run optimistic. Recency decay not implemented (a 2019 review counts the same as 2026). European stock pill is best-effort; verify availability in your region.
+  </div>
+
+  <div class="f9-toast" id="f9Toast"></div>
+</div>
 </div>
 
-<div class="main">
-
-  <!-- Crop tabs -->
-  <div class="crop-tabs" id="cropTabs">
-    <button class="crop-tab active" data-crop="oder">Suvioder</button>
-    <button class="crop-tab" data-crop="kaer">Kaer</button>
-    <button class="crop-tab" data-crop="suvinisu">Suvinisu</button>
-    <button class="crop-tab" data-crop="talinisu">Talinisu</button>
-    <button class="crop-tab" data-crop="hernes">Hernes / Uba</button>
-    <button class="crop-tab" data-crop="taliraps">Taliraps</button>
-    <button class="crop-tab" data-crop="suviraps">Suviraps</button>
-  </div>
-
-  <!-- Top row: inputs left, panel+costs right -->
-  <div class="top-panels">
-    <!-- Left: sisendhinnad -->
-    <div>
-      <div class="inputs-grid card" id="inputsGrid">
-        <h3 style="font-family:Georgia,serif;font-size:1rem;color:var(--text);margin-bottom:4px">Sisendhinnad</h3>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>NPK 10-26-26 (€/t)</label>
-            <span class="slider-cur" id="disp_npk">579</span>
-          </div>
-          <input type="range" id="inp_npk" min="0" max="100" step="1" value="47">
-          <div class="slider-range"><span>0 (ei kasuta)</span><span>900</span></div>
-        </div>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>N-väetis YaraBela/N27 (€/t)</label>
-            <span class="slider-cur" id="disp_n">490</span>
-          </div>
-          <input type="range" id="inp_n" min="0" max="100" step="1" value="49">
-          <div class="slider-range"><span>0 (ei kasuta)</span><span>800</span></div>
-        </div>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>Kütus (€/l) · <span id="disp_fuel_ha" style="color:var(--accent);font-size:0.7rem">40 €/ha</span></label>
-            <span class="slider-cur" id="disp_fuel_l">1.00</span>
-          </div>
-          <input type="range" id="inp_fuel_l" min="0.70" max="2.00" step="0.01" value="1.00">
-          <div class="slider-range"><span>0.70</span><span>2.00</span></div>
-        </div>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>Püsikulud (€/ha)</label>
-            <span class="slider-cur" id="disp_fixed">500</span>
-          </div>
-          <input type="range" id="inp_fixed" min="100" max="1200" step="10" value="500">
-          <div class="slider-range"><span>100</span><span>1200</span></div>
-        </div>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>Kuivatus (€/t)</label>
-            <span class="slider-cur" id="disp_dry">20</span>
-          </div>
-          <input type="range" id="inp_dry" min="0" max="60" step="1" value="20">
-          <div class="slider-range"><span>0</span><span>60</span></div>
-        </div>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>Transport (km) · <span id="disp_trans_eur" style="color:var(--accent);font-size:0.7rem">10.70 €/t</span></label>
-            <span class="slider-cur" id="disp_trans">100</span>
-          </div>
-          <input type="range" id="inp_trans" min="10" max="300" step="5" value="100">
-          <div class="slider-range"><span>10</span><span>300</span></div>
-        </div>
-
-        <div class="input-group slider-group">
-          <div class="slider-top">
-            <label>Toetused (€/ha)</label>
-            <span class="slider-cur" id="disp_support">0</span>
-          </div>
-          <input type="range" id="inp_support" min="0" max="300" step="5" value="0">
-          <div class="slider-range"><span>0</span><span>300</span></div>
-        </div>
-
-        <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:12px">
-          <h3 style="font-family:Georgia,serif;font-size:1rem;color:var(--text);margin-bottom:10px">Väljundid</h3>
-          <div class="input-group slider-group">
-            <div class="slider-top">
-              <label>Saagikus</label>
-              <span class="slider-cur" id="yieldDisplay">4.0 t/ha</span>
-            </div>
-            <input type="range" id="yieldSlider" min="1" max="8" step="0.1" value="4">
-            <div class="slider-range"><span id="yieldMin">1</span><span id="yieldMax">8</span></div>
-          </div>
-          <div id="cropPriceSliderWrap" style="margin-top:10px"></div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Right: väljundid + kulud — üks paneel -->
-    <div>
-      <div class="card">
-        <h3>Tulud / Kulud</h3>
-        <div id="profitDisplay" class="profit-big good">–</div>
-        <div id="profitUnit" style="font-size:0.75rem;color:var(--text-dim);font-family:'DM Mono',monospace;margin-bottom:12px">€/ha (neto, ilma toetusteta)</div>
-        <div id="beDisplay" class="be-badge" style="margin-bottom:16px">Saagikus BE: <strong id="beVal">–</strong> &nbsp;|&nbsp; Hind BE: <strong id="beValPrice">–</strong></div>
-        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
-          <div class="breakdown" id="breakdown"></div>
-        </div>
-        <div id="recBox" class="rec-box" style="margin-top:14px"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom: full-width chart -->
-  <div class="chart-full">
-    <div class="card">
-      <div class="chart-wrap" id="chartWrap" style="position:relative;height:320px">
-        <canvas id="profitChart"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ─── Crop definitions ──────────────────────────────────────────────────────────
-// Each crop: yields[], sellPrice, plus function to compute variable costs at yield y
-
-const CROPS = {
-  oder: {
-    name: 'Suvioder',
-    yields: [3,4,5,6,7,8],
-    defaultSlider: 4, sliderMax: 8,
-    defaultPrice: 180, priceLabel: 'Oder hind (€/t)',
-    fuelLitres: 40, seedHa: 90,
-    // 1t: N=20, P=5, K=10 – NPK sized by K; artikkel: y*55 @ NPK599+Axan490
-    fertFn: (y, npk, nv) => {
-      const npkKg = (10/0.216)*y;  // K drives NPK amount
-      const axanKg = Math.max(0, (20*y - npkKg*0.10))/0.27;
-      return npkKg*(npk/1000) + axanKg*(nv/1000);
-    },
-    chemFn: y => y < 5 ? 10 : y < 7 ? 21 : 55,
-    dryPerT: true,
-    recs: {
-      good: 'Nulli tulemiseks on vaja üle 7 t/ha. Madalate püsikuludega on jumet olemas.',
-      mid:  '6+ t/ha annab positiivse tulemuse. Marginaalid on õhukesed.',
-      bad:  'Suurte püsikuludega on suvioder kahjumlik. Farmer Tõnis ei soovita.'
-    }
-  },
-
-  kaer: {
-    name: 'Kaer',
-    yields: [3,4,5,6,7,8],
-    defaultSlider: 4, sliderMax: 8,
-    defaultPrice: 158, priceLabel: 'Kaer hind (€/t)',
-    fuelLitres: 40,
-    // Seeme varieerub koos saagikusega (mikroväetised vm): 60,60,66,66,72,71
-    seedFn: y => y < 5 ? 60 : y < 7 ? 66 : 71,
-    // 1t: N=12(y<=4), N=14(y5-6), N=15(y>=7), P=4, K=8 – K drives NPK
-    fertFn: (y, npk, nv) => {
-      const nPerT = y <= 4 ? 12 : y <= 6 ? 14 : 15;
-      const npkKg = (8/0.216)*y;
-      const axanKg = Math.max(0, (nPerT*y - npkKg*0.10))/0.27;
-      return npkKg*(npk/1000) + axanKg*(nv/1000);
-    },
-    chemFn: y => y < 5 ? 6 : y < 7 ? 15 : 41,
-    dryPerT: true,
-    recs: {
-      good: 'Kaer on odramast ökonoomsem. 7+ t/ha annab plussi.',
-      mid:  '6 t/ha juures ollakse nulli lähedal.',
-      bad:  'Kaera kasvatamine suurte püsikuludega on kahjumlik. Farmer Tõnis ei soovita.'
-    }
-  },
-
-  suvinisu: {
-    name: 'Suvinisu',
-    yields: [3,4,5,6,7,8],
-    defaultSlider: 5, sliderMax: 8,
-    defaultPrice: 200, priceLabel: 'Suvinisu hind (€/t)',
-    fuelLitres: 40, seedHa: 90,
-    // 1t: N=20(y<=4) / N=25(y>=5), P=5, K=12 – P drives NPK sizing
-    fertFn: (y, npk, nv) => {
-      const nPerT = y <= 4 ? 20 : 25;
-      const npkKg = (5/0.1134)*y;
-      const axanKg = Math.max(0, (nPerT*y - npkKg*0.10))/0.27;
-      return npkKg*(npk/1000) + axanKg*(nv/1000);
-    },
-    chemFn: y => 50,
-    dryPerT: true,
-    recs: {
-      good: 'Murdepunkt ~6,5 t/ha. Toidunisu hind annab lisaboonuse.',
-      mid:  '6 t/ha juures ollakse nulli lähedal. Odra ja nisu vahel eelistage nisu.',
-      bad:  'Suvinisu vajab kõrget saagikust. Suured püsikulud teevad kasumi raskeks.'
-    }
-  },
-
-  talinisu: {
-    name: 'Talinisu',
-    yields: [1,2,3,4,5,6,7,8],
-    defaultSlider: 5, sliderMax: 8,
-    defaultPrice: 190, priceLabel: 'Talinisu hind (€/t)',
-    fuelLitres: 35, seedHa: 100,
-    // 1t: N=25, P=5, K=12 – P drives NPK; N27+4S for top-dress
-    fertFn: (y, npk, nv) => {
-      const npkKg = (5/0.1134)*y;
-      const axanKg = Math.max(0, (25*y - npkKg*0.10))/0.27;
-      return npkKg*(npk/1000) + axanKg*(nv/1000);
-    },
-    // TKV: herbitsiid + fungitsiidid saagiootuse järgi
-    chemFn: y => {
-      if (y <= 2) return 30;           // herbitsiid
-      if (y <= 4) return 41;           // herbitsiid + 1 fungitsiid
-      if (y <= 6) return 90;           // herbitsiid + 2 fungitsiidi
-      return 125;                      // herbitsiid + 3 fungitsiidi
-    },
-    dryPerT: true,
-    recs: {
-      good: 'Murdepunkt ~7 t/ha. III kategooria toidunisu. Hea marginaal kõrge saagi korral.',
-      mid:  '5–6 t/ha juures ollakse nulli lähedal. Iga lisatünn loeb.',
-      bad:  'Alla 4 t/ha on kahjumlik. Talvitumine ja haigusrisk on peamine oht.'
-    }
-  },
-
-  hernes: {
-    name: 'Hernes / Uba',
-    yields: [2,3,4,5,6],
-    defaultSlider: 3, sliderMax: 6,
-    defaultPrice: 230, priceLabel: 'Hernes/uba hind (€/t)',
-    fuelLitres: 40, seedHa: 120,
-    // N fikseeritakse ise – ainult NPK P+K jaoks (P-driven sizing, K ka kaetud)
-    // 1t: P=4, K=10 – NPK sized by P
-    fertFn: (y, npk, nv) => {
-      const npkKg = (4/0.1134)*y;  // P drives NPK; P2O5=26% → P=11.34%
-      return npkKg*(npk/1000);    // Axan 0 (lämmastik fikseeritakse)
-    },
-    chemFn: y => 95,  // herbitsiid 60 + putukatõrje 15 + fungitsiid 20
-    dryPerT: true, dryMultiplier: 2.0,  // artikkel: kuivatus ~2× teraviljast
-    recs: {
-      good: 'Uba on parem valik kui hernes. 5+ t/ha annab positiivse tulemuse.',
-      mid:  '4 t/ha annab positiivse brutotulemuse, aga püsikulud söövad.',
-      bad:  'Suurte püsikuludega on herne/oa kasvatus peaaegu kindlalt kahjumlik.'
-    }
-  },
-
-  taliraps: {
-    name: 'Taliraps',
-    yields: [1,2,3,3.5,4,5,6],
-    defaultSlider: 3.5, sliderMax: 6,
-    defaultPrice: 440, priceLabel: 'Taliraps hind 40% õlisus (€/t)',
-    // artikkel: EDK 0.6€/l × ~78l = 47€/ha; skaleerime kasutaja hinnaga
-    fuelLitres: 78, seedHa: 70,
-    // 1t: N=30 (uued hübriidid!), P=10, K=20 – K drives NPK → 93€/t @ art. hinnad
-    fertFn: (y, npk, nv) => {
-      const npkKg = (20/0.216)*y;
-      const axanKg = Math.max(0, (30*y - npkKg*0.10))/0.27;
-      return npkKg*(npk/1000) + axanKg*(nv/1000);
-    },
-    // boor + 2 kasvureg-fungitsiidi sügis + 2 fungitsiidi kevad + 2 herbitsiidi + 2 insektitsiidi
-    chemFn: y => 250,
-    dryPerT: true,
-    recs: {
-      good: '3 t/ha juures on kasum positiivne! Taliraps on praegu kõige tulusam kultuur.',
-      mid:  'Taliraps annab positiivse tulemuse juba 3 t/ha juures.',
-      bad:  'Alla 3 t/ha on kahjumlik, kuid hind kompenseerib palju.'
-    }
-  },
-
-  suviraps: {
-    name: 'Suviraps',
-    yields: [1,1.5,2,2.5,3,3.5],
-    defaultSlider: 2.5, sliderMax: 4,
-    defaultPrice: 440, priceLabel: 'Suviraps hind 40% õlisus (€/t)',
-    fuelLitres: 58, seedHa: 70,
-    // sama väetisestrateegia nagu talirapsil
-    fertFn: (y, npk, nv) => {
-      const npkKg = (20/0.216)*y;
-      const axanKg = Math.max(0, (30*y - npkKg*0.10))/0.27;
-      return npkKg*(npk/1000) + axanKg*(nv/1000);
-    },
-    // 2 herbitsiidi + 2 fungitsiidi/kasvureg + 4 insektitsiidi
-    chemFn: y => 158,
-    dryPerT: true,
-    recs: {
-      good: '2,5 t/ha annab napilt plussi. Potentsiaal on olemas, kuid risk on kõrge.',
-      mid:  'Suviraps on napp – iga kg loeb. Putukariski peab arvestama.',
-      bad:  'Alla 2,5 t/ha on kahjumlik. Insektitsiidideta on suviraps väga riskantne.'
-    }
-  }
-}
-// Price input overrides per crop
-const cropPriceInputs = {};
-
-// Current state
-let activeCrop = 'oder';
-let profitChart = null;
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-// NPK slider: 0 = ei kasuta, 1-100 = 300-900 €/t
-function npkSliderToPrice(v) {
-  v = +v;
-  if (v === 0) return 0;
-  return Math.round(300 + (v - 1) * (600 / 99));
-}
-
-function nvSliderToPrice(v) {
-  v = +v;
-  if (v === 0) return 0;
-  return Math.round(200 + (v - 1) * (600 / 99));
-}
-
-function getInputs() {
-  return {
-    npk: npkSliderToPrice(document.getElementById('inp_npk').value),
-    nv:  nvSliderToPrice(document.getElementById('inp_n').value),
-    fuelL: +document.getElementById('inp_fuel_l').value || 1.0,
-    fixed: +document.getElementById('inp_fixed').value || 500,
-    dry: +document.getElementById('inp_dry').value || 20,
-    trans: 0.08 * (+document.getElementById('inp_trans').value || 100) + 2.70,
-    support: +document.getElementById('inp_support').value || 0,
+(function(){
+  const RATES = {EUR:1, USD:1.09, GBP:0.86};
+  const SYM = {EUR:'€', USD:'$', GBP:'£'};
+  const SOURCES = {
+    iRF:{name:'iRunFar', tier:'ind'}, OGL:{name:'OutdoorGearLab', tier:'ind'},
+    SB:{name:'Switchback', tier:'ind'}, CH:{name:'CleverHiker', tier:'ind'},
+    SH:{name:'SectionHiker', tier:'ind'}, TS:{name:'Trailspace', tier:'ind'},
+    BT:{name:'Better Trail', tier:'ind'},
+    TR:{name:'Treeline Review', tier:'ind'}, WC:{name:'Wirecutter', tier:'ind'},
+    UOG:{name:'Ultralight Outdoor Gear', tier:'ind'}, AlpT:{name:'Alpinetrek', tier:'ind'},
+    AT:{name:'Active-Traveller', tier:'mag'},
+    Out:{name:'Outside Online', tier:'mag'}, OL:{name:'Outdoor Life', tier:'mag'},
+    T3:{name:'T3', tier:'mag'}, TGO:{name:'TGO', tier:'mag'},
+    CF:{name:'Countryfile', tier:'mag'}, AdV:{name:'Advnture', tier:'mag'},
+    Sct:{name:'Scotsman', tier:'mag'}, OM:{name:'Outdoors Magic', tier:'mag'},
+    LFTO:{name:'Live for the Outdoors', tier:'mag'}, BPK:{name:'Backpacker', tier:'mag'},
+    OutDE:{name:'Outdoor Magazin (DE)', tier:'mag'}, Berg:{name:'Bergzeit (DE)', tier:'mag'},
+    REIa:{name:'REI Expert Advice', tier:'ind'}, TEGau:{name:'Equipment Guide AU', tier:'ind'},
+    TT:{name:'The Trek', tier:'blog'}, GJ:{name:'GearJunkie', tier:'blog'},
+    SuB:{name:'Summitborn', tier:'blog'}, BP:{name:'Backwoods Pursuit', tier:'blog'},
+    AA:{name:'Adventure Alan', tier:'blog'}, MMG:{name:'Mountain Misadventures', tier:'blog'},
+    BHS:{name:'BikeHikeSafari', tier:'blog'}, TGv:{name:'TrailGroove', tier:'blog'},
+    TFR:{name:'Top Firearm Reviews', tier:'afblog'},
+    REI:{name:'REI', tier:'shop'}, Dec:{name:'Decathlon', tier:'shop'},
+    Alp:{name:'Alpkit', tier:'shop'}, Amz:{name:'Amazon', tier:'shop'},
+    Brg:{name:'Bergfreunde', tier:'shop'}, MK:{name:'MilitaryKit', tier:'shop'},
+    NH:{name:'Naturehike', tier:'shop'}, Vng:{name:'Vango', tier:'shop'},
+    Rob:{name:'Robens', tier:'shop'}, AbS:{name:'Absolute-snow', tier:'shop'},
+    GO:{name:'GO Outdoors', tier:'shop'}, Trk:{name:'Trekkinn', tier:'shop'},
+    Bfr:{name:'Bergfreunde reviews', tier:'shop'}
   };
-}
+  const PROFILES = {
+    balanced:  {indie:0.35, mag:0.10, blog:0.05, shop:0.20, wpw:0.25, price:0.05},
+    thruhiker: {indie:0.40, mag:0.05, blog:0.05, shop:0.05, wpw:0.40, price:0.05},
+    weekender: {indie:0.10, mag:0.05, blog:0.05, shop:0.30, wpw:0.20, price:0.30},
+    evidence:  {indie:0.50, mag:0.05, blog:0.00, shop:0.30, wpw:0.10, price:0.05}
+  };
+  const BAGS = [
+    {n:'Vango Atlas 250',t:'hooded',weight:1400,temp:8,eur:29,fill:'ThermoLock synthetic',ins:'synthetic',euStock:true,sr:{Vng:{rating:4.2,count:48}},ec:[],pros:['Cheap festival bag','ISO-tested temp rating'],cons:['Heavy 1.4kg','Summer-only warmth'],note:'ISO 23538-tested. Festival/intro bag.'},
+    {n:'Coleman Kompact 30F Rectangle',t:'hooded',weight:2200,temp:-1,eur:96,fill:'synthetic',ins:'synthetic',euStock:false,sr:{REIa:{note:'Best Budget Camping'}, REI:{rating:4.8,count:65}, Amz:{rating:4.5,count:1240}},ec:['REIa'],pros:['REI Best Budget Camping','Plush 66" hip girth','4.8★ across 65 reviews'],cons:['Heavy 2.2kg','Synthetic; bulky packed'],note:'REI Expert Advice Best Budget Camping. 66" hip girth, rectangular, plush.'},
+    {n:'Coleman Pathfinder',t:'hooded',weight:1700,temp:7,eur:30,fill:'ThermoTech synthetic',ins:'synthetic',euStock:true,sr:{Sct:{}, Amz:{rating:4.3,count:687}},ec:[],pros:['Cheapest editorial-covered bag'],cons:['Heavy 1.7kg','Only summer-rated'],note:'Cheapest covered in editorial. Car-camping only.'},
+    {n:'Vango Kanto 250',t:'hooded',weight:1380,temp:8,eur:32,fill:'synthetic',ins:'synthetic',euStock:true,sr:{Vng:{rating:4.0,count:23}},ec:[],pros:['Cheap entry-level'],cons:['Same fill as Atlas in different color','No editorial reviews'],note:'Same fill as Atlas 250 in different colour.'},
+    {n:'Vango Atlas 350',t:'hooded',weight:1700,temp:5,eur:38,fill:'ThermoLock synthetic',ins:'synthetic',euStock:true,sr:{Vng:{rating:4.4,count:112}},ec:[],pros:['Slightly warmer than 250'],cons:['Heavy 1.6kg','No editorial coverage'],note:'Slightly warmer, otherwise basic.'},
+    {n:'Forclaz MT500 15°C',t:'hooded',weight:680,temp:15,eur:40,fill:'synthetic',ins:'synthetic',euStock:true,sr:{T3:{}, Dec:{rating:4.4,count:1158}},ec:[],pros:['€40 from Decathlon','Easy EU availability'],cons:['Summer-only','No editorial endorsements'],note:'Decathlon house brand, summer-only.'},
+    {n:'Forclaz MT500 5°C',t:'hooded',weight:1200,temp:5,eur:65,fill:'synthetic',ins:'synthetic',euStock:true,sr:{T3:{}, Dec:{rating:4.5,count:1056}},ec:[],pros:['Decathlon best-seller','4.6★/842 buyers'],cons:['Heavy for the warmth','Limited editorial coverage'],note:'Heavy but cheap and reliable.'},
+    {n:'Vango Nitestar Alpha 250',t:'hooded',weight:1450,temp:7,eur:65,fill:'Insulite synthetic',ins:'synthetic',euStock:true,sr:{Brg:{rating:4.0,count:4}},ec:[],pros:['Sub-€35 budget','Wide UK retail'],cons:['Heavy','Synthetic; bulky'],note:'Mid-budget Vango synthetic.'},
+    {n:'Highlander Rayet 250',t:'hooded',weight:1100,temp:5,eur:70,fill:'synthetic',ins:'synthetic',euStock:true,sr:{TGO:{}},ec:[],pros:['TGO covered: wider footbox helps larger feet','Zip rarely snags'],cons:['1.4kg total','Slow to warm up'],note:'UK budget pick, wider footbox.'},
+    {n:'Vango Mantis Planet 350',t:'hooded',weight:1500,temp:3,eur:75,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{TGO:{note:'Greener Choice'}, Brg:{rating:4.2,count:6}},ec:[],pros:['TGO: 3-4 season value for tall sleepers','All-recycled construction'],cons:['Bulky synthetic','Long for short users'],note:'TGO budget pick, 100% recycled.'},
+    {n:'Naturehike CW280',t:'hooded',weight:570,temp:6,eur:85,fill:'650fp duck down (claimed 800fp)',ins:'down',euStock:true,sr:{Amz:{rating:4.4,count:1247}, NH:{rating:4.6,count:892}},ec:[],pros:['Sub-€100 down option','4.6★/892 Amazon buyers'],cons:['"800fp" claim disputed by testers','Limited European stock'],note:'Budget UL down. Quality questionable but light.'},
+    {n:'Robens Moraine I +11',t:'hooded',weight:615,temp:11,eur:82,fill:'synthetic',ins:'synthetic',euStock:true,sr:{OM:{note:'Best lightweight summer pick'}, Rob:{rating:4.3,count:18}},ec:[],pros:['OM Best Lightweight Summer','615g — light for synthetic'],cons:['Summer-only','Tight cut for broader builds'],note:'Lightest synthetic in price tier per Outdoors Magic.'},
+    {n:'Snugpak Softie Expansion 2',t:'hooded',weight:1200,temp:2,eur:95,fill:'Softie Premier synthetic',ins:'synthetic',euStock:true,sr:{OM:{note:'6-year tested'}, AbS:{rating:4.6,count:78}},ec:[],pros:['OM 6+ year tested','Internal LED torch pocket'],cons:['Comfort rating runs optimistic','Bulky packed'],note:'OM tested 6+ years. Has internal LED torch pocket.'},
+    {n:'Alpkit Cloud Peak 140',t:'hooded',weight:1040,temp:11,eur:95,fill:'synthetic',ins:'synthetic',euStock:true,sr:{OM:{note:'Best Value Lightweight'}, Alp:{rating:4.6,count:156}},ec:['OM'],pros:['UK-direct cottage brand','4.6★/124 Alpkit buyers'],cons:['Summer/early autumn only','Limited UK stock periods'],note:'OM Best Value Lightweight pick. PFC-free DWR. Machine washable.'},
+    {n:'Quechua Comfort Double 0',t:'double',weight:4000,temp:0,eur:99,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{OM:{note:'Best double value'}, Dec:{rating:4.5,count:312}},ec:[],pros:['Two-person budget bag','Decathlon-stocked'],cons:['Very heavy (3.4kg)','Comfort rating optimistic'],note:'Decathlon double, separates into 2 duvets.'},
+    {n:'Vango Apex 2',t:'hooded',weight:1750,temp:0,eur:99,fill:'aluminised synthetic',ins:'synthetic',euStock:true,sr:{OM:{note:'2-year tested'}, AbS:{rating:4.4,count:42}},ec:[],pros:['Lightweight Vango option','TGO covered'],cons:['Comfort rating optimistic','Tighter cut'],note:'Has aluminised reflective inner — unusual at this price.'},
+    {n:'Mountain Equipment Klimatic I',t:'hooded',weight:750,temp:4,eur:152,fill:'PolarLoft synthetic',ins:'synthetic',euStock:true,sr:{OM:{note:'Premium-derived synthetic'}},ec:[],pros:['Synthetic Pertex shell','Damp-condition friendly'],cons:['Heavy 1.3kg','Synthetic bulkier than down'],note:'ME premium-derived synthetic at £130. Wet-performance focus.'},
+    {n:'Coleman 30°F Sleeping Bag',t:'hooded',weight:1900,temp:-1,eur:50,fill:'ThermoTech synthetic',ins:'synthetic',euStock:false,sr:{Amz:{rating:4.5,count:4280}},ec:[],pros:['€60 mass-market option','4.6★/3120 Amazon buyers'],cons:['Heavy 2.1kg','No editorial coverage'],note:'Real Coleman brand. Volume buyer favourite.'},
+    {n:'Coleman 0°F Mummy',t:'hooded',weight:1900,temp:-9,eur:90,fill:'ThermoTech synthetic',ins:'synthetic',euStock:false,sr:{Amz:{rating:4.4,count:5920}},ec:[],pros:['Real Coleman cold-weather','4.4★/5920 reviews — massive sample'],cons:['Heavy 1.9kg','Synthetic; bulky'],note:'Real Coleman cold-weather. 5920 ratings.'},
+    {n:'REI Co-op Trailmade 20',t:'hooded',weight:1500,temp:-1,eur:75,fill:'recycled synthetic',ins:'synthetic',euStock:false,sr:{REIa:{note:'Best Budget Backpacking'}, REI:{rating:4.2,count:100}},ec:['REIa'],pros:['REI Best Budget Backpacking','98% recycled bluesign-certified','Six size options'],cons:['Not lightweight (1.5kg)','Bulky vs ultralight options'],note:'REI Expert Advice Best Budget Backpacking. 98% recycled, bluesign.'},
+    {n:'Deuter Exosphere +4',t:'hooded',weight:1100,temp:4,eur:120,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{OutDE:{note:'Synthetic Test Winner 10/2025'}, Berg:{note:'Top synthetic value'}},ec:['OutDE'],pros:['Outdoor Magazin synthetic test winner 2025','Recycled polyester'],cons:['Summer-rated only','Cold sleepers should size warmer'],note:'Outdoor Magazin DE synthetic test winner 2025.'},
+    {n:'Deuter Exosphere -4',t:'hooded',weight:1450,temp:-4,eur:165,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{OutDE:{note:'Test Winner 10/2024'}},ec:['OutDE'],pros:['Outdoor Magazin Test Winner 2024','Strong 3-season value'],cons:['Synthetic adds weight','Bulky packed'],note:'Outdoor Magazin DE Test Winner 2024.'},
+    {n:'Exped DeepSleep 0°C',t:'hooded',weight:1100,temp:0,eur:130,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{OutDE:{note:'Price-Performance Winner'}, BPK:{note:'Best Affordable Synthetic'}},ec:['OutDE','BPK'],pros:['OutDE + Backpacker both pick best-value synthetic','Recycled materials'],cons:['Synthetic packs larger than down','650€ premiums get more warmth'],note:'OutDE + Backpacker both call this best-value synthetic.'},
+    {n:'Exped DeepSleep -5°C',t:'hooded',weight:1300,temp:-5,eur:155,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{OutDE:{note:'"Warmer than rated"'}},ec:[],pros:['OutDE: warmer than rated','Recycled construction'],cons:['Heavy for backpacking','Bulky packed'],note:'OutDE: warmer than rated. For cold sleepers.'},
+    {n:'Robens Glacier III -9C',t:'hooded',weight:1795,temp:-9,eur:170,fill:'AirThermo polyester',ins:'synthetic',euStock:true,sr:{LFTO:{note:'Best value 3-season synthetic'}, Rob:{rating:4.4,count:34}},ec:['LFTO'],pros:['LFTO: superb EN/ISO ratings for the price','Strong cold-weather synthetic'],cons:['Very heavy at 1.8kg','Bulky packed'],note:'LFTO: superb EN/ISO ratings for the price. Heavy.'},
+    {n:'OEX Leviathan EV 900 Down',t:'hooded',weight:1399,temp:-9,eur:200,fill:'600fp hydrophobic down',ins:'down',euStock:true,sr:{LFTO:{note:'Budget winter pick'}, GO:{rating:4.3,count:67}},ec:[],pros:['LFTO winter pick','Exceptional £169 winter down value'],cons:['Build quality reflects price','600fp down only'],note:'GO Outdoors UK house brand. £169 winter down — exceptional value.'},
+    {n:'Mountain Equipment Glacier 700',t:'hooded',weight:1450,temp:-13,eur:380,fill:'700fp hydrophobic down',ins:'down',euStock:true,sr:{Berg:{note:'Light winter biwak option'}},ec:[],pros:['Made-in-UK winter down','Hydrophobic treated for damp'],cons:['Heavy 1.5kg','Pricey for fill power'],note:'Made-in-UK winter down. Treated for damp.'},
+    {n:'Mountain Equipment Xenith III',t:'hooded',weight:1810,temp:-25,eur:740,fill:'900fp goose down',ins:'down',euStock:true,sr:{LFTO:{note:'Best Sleeping Bag Overall 2026'}, GO:{rating:4.8,count:23}},ec:['LFTO'],pros:['LFTO Best Overall 2026','Arctic-grade -25°C','900fp premium down'],cons:['Eye-watering €740 price','Overkill for 3-season'],note:'LFTO Best Overall 2026. Serious Arctic-grade winter bag.'},
+    {n:'Rab Neutrino 400',t:'hooded',weight:790,temp:-1,eur:380,fill:'800fp hydrophobic down',ins:'down',euStock:true,sr:{LFTO:{note:'Best Lightweight'}, Berg:{}},ec:['LFTO'],pros:['LFTO Best Lightweight','Recycled fabrics + Fair Wear Foundation'],cons:['Highly tapered — restrictive for movers','Side sleepers may struggle'],note:'LFTO Best Lightweight 2026. Highly tapered mummy.'},
+    {n:'Rab Mythic 400',t:'hooded',weight:710,temp:-4,eur:520,fill:'900fp Nikwax-treated down',ins:'down',euStock:true,sr:{OutDE:{note:'Lightest -4°C tested'}},ec:[],pros:['OutDE: lightest -4°C tested at 710g','Nikwax-treated 900fp down'],cons:['Premium price','Slim cut'],note:'OutDE: just over 700g down to -4°C. Nikwax-treated.'},
+    {n:'Rab Mythic Ultra 120',t:'hooded',weight:330,temp:5,eur:520,fill:'900fp European goose down',ins:'down',euStock:true,sr:{TEGau:{note:'Best Lightweight UL'}},ec:['TEGau'],pros:['330g — among lightest mummy bags','TEGau Best Lightweight UL'],cons:['Not for freezing conditions','Doesn\'t zip all the way'],note:'330g — among lightest mummy bags in production.'},
+    {n:'Rab Ascent 700',t:'hooded',weight:1480,temp:-9,eur:340,fill:'650fp hydrophobic down',ins:'down',euStock:true,sr:{Berg:{}},ec:[],pros:['European 4-season workhorse','Hydrophobic down'],cons:['Heavy 1.5kg','650fp only'],note:'European 4-season workhorse.'},
+    {n:'Rab Alpine 800',t:'hooded',weight:1260,temp:-16,eur:360,fill:'800fp hydrophobic down',ins:'down',euStock:true,sr:{OM:{note:'Best warmth-to-weight'}},ec:[],pros:['OM editor pick: best warmth-to-weight tested','Two-way zip + interior pocket'],cons:['Basic stuff sack lacks compression','Pricey'],note:'OM editor pick: best warmth-to-weight tested.'},
+    {n:'Big Agnes Fly Creek UL 25',t:'hooded',weight:700,temp:2,eur:340,fill:'850fp goose down',ins:'down',euStock:false,sr:{LFTO:{note:'Premium UL 3-season'}},ec:[],pros:['LFTO premium UL pick','700g, +2°C comfort'],cons:['Slim fit may restrict broader builds','Not for cold weather'],note:'LFTO: 700g, +2°C comfort. Slim fit.'},
+    {n:'Big Agnes Torchlight 20',t:'hooded',weight:1020,temp:-7,eur:275,fill:'850fp DownTek',ins:'down',euStock:false,sr:{TEGau:{}, REI:{rating:4.5,count:67}, Amz:{rating:4.6,count:34}},ec:[],pros:['TEGau: roomy, comfortable','Expandable side panels for movers'],cons:['Not fully ultralight','Zippers can snag'],note:'TEGau: roomy, comfortable. Expandable side panels.'},
+    {n:'Big Agnes Sidewinder SL 20',t:'hooded',weight:1020,temp:-7,eur:245,fill:'650fp DownTek + FireLine Eco',ins:'down',euStock:false,sr:{TEGau:{note:'Best for side sleepers'}},ec:[],pros:['TEGau Best for side sleepers','Curved design follows side-sleep posture'],cons:['Not ideal for back sleepers','Down sheds slightly'],note:'Built specifically for side sleepers. Hybrid down/synth.'},
+    {n:'TNF Blue Kazoo',t:'hooded',weight:1100,temp:-7,eur:335,fill:'700g ProDown',ins:'down',euStock:true,sr:{TEGau:{}, Amz:{rating:4.5,count:78}},ec:[],pros:['Long-running TNF down workhorse','Wide retail availability'],cons:['Narrow foot box','Some feathers escape'],note:'Old-school TNF down workhorse. Long-running model.'},
+    {n:'Mont Helium 450',t:'hooded',weight:850,temp:-3,eur:480,fill:'450g 850fp duck down',ins:'down',euStock:false,sr:{TEGau:{note:'Best Overall AU'}},ec:['TEGau'],pros:['TEGau Best Overall AU','Roomy mummy, well-built','850fp duck down'],cons:['Pricey at €480','Hood details could be better'],note:'Australian/NZ Best Overall. Roomy mummy, well-built.'},
+    {n:'One Planet OESB Synthetic -5',t:'hooded',weight:1300,temp:-5,eur:150,fill:'Thermolink synthetic',ins:'synthetic',euStock:false,sr:{TEGau:{note:'Best Budget AU'}},ec:['TEGau'],pros:['TEGau Best Budget AU','Wet/humid climate friendly','Machine washable'],cons:['Heavy 1.3kg','No interior zip pocket'],note:'AU best budget. Wet-climate friendly.'},
+    {n:'Sea to Summit Trek Down -9',t:'hooded',weight:1440,temp:-9,eur:365,fill:'650fp duck down',ins:'down',euStock:true,sr:{TEGau:{note:'Best Alpine'}, REI:{rating:4.4,count:42}},ec:[],pros:['TEGau Best Alpine','Roomy and versatile'],cons:['Bulky for the warmth','Down can leak'],note:'AU Best Alpine. Cold-climate but bulky.'},
+    {n:'Therm-a-Rest Boost 32',t:'hooded',weight:780,temp:0,eur:260,fill:'650fp Nikwax down',ins:'down',euStock:true,sr:{BPK:{note:'Most Versatile'}},ec:['BPK'],pros:['Backpacker Most Versatile 2025','Stretchy fabric for movers'],cons:['Down only 650fp','Limited cold weather use'],note:'Backpacker Most Versatile 2025. Stretchy fabric.'},
+    {n:'Argali Alpine 20',t:'hooded',weight:870,temp:-7,eur:545,fill:'850fp hydrophobic down',ins:'down',euStock:false,sr:{BPK:{note:'Best Overall 2025'}},ec:['BPK'],pros:['Backpacker Best Overall 2025','Made-in-USA hunting brand quality'],cons:['Not widely available in EU','Premium price'],note:'Backpacker Best Overall 2025. Made-in-USA hunting brand.'},
+    {n:'Nordisk Passion Three',t:'hooded',weight:530,temp:-2,eur:480,fill:'850fp European goose down',ins:'down',euStock:true,sr:{},ec:[],pros:['Made-in-Germany with traceable Crystal down','530g UL with 850fp'],cons:['No major editorial endorsements yet','Premium price'],note:'Made in Germany with traceable Crystal down. Y by Nordisk premium line.'},
+    {n:'Nordisk Abel +10',t:'hooded',weight:748,temp:10,eur:90,fill:'Norguard synthetic',ins:'synthetic',euStock:true,sr:{},ec:[],pros:['Modular system pairs with outer bag','European-made synthetic'],cons:['Summer-only solo use','Zip could be improved'],note:'Modular design. Pairs with outer bag for cold use.'},
+    {n:'Nordisk Gormsson +10',t:'hooded',weight:550,temp:10,eur:165,fill:'700fp duck down',ins:'down',euStock:true,sr:{},ec:[],pros:['Light Nordisk down for warm weather UL','European-made'],cons:['Pricey for duck down','Summer/early autumn only'],note:'Lighter Nordisk down for warm-weather UL.'},
+    {n:'Carinthia G145',t:'hooded',weight:850,temp:5,eur:170,fill:'G-Loft synthetic',ins:'synthetic',euStock:true,sr:{OutDE:{note:'Best summer synthetic'}},ec:[],pros:['OutDE Best summer synthetic','Made in Europe','Antibacterial liner'],cons:['Summer-rated only','Synthetic packs larger'],note:'Made in Europe. Antibacterial liner. OutDE summer pick.'},
+    {n:'Carinthia Defence 4',t:'hooded',weight:1650,temp:-12,eur:280,fill:'G-Loft synthetic',ins:'synthetic',euStock:true,sr:{},ec:[],pros:['Austrian military synthetic','Modular system option','Bombproof construction'],cons:['Heavy 1.65kg','Bulky packed'],note:'Austrian military synthetic. Modular system option.'},
+    {n:'Carinthia G90',t:'hooded',weight:700,temp:8,eur:140,fill:'G-Loft synthetic',ins:'synthetic',euStock:true,sr:{OutDE:{note:'Best summer'}},ec:[],pros:['Lightest Carinthia synthetic at 700g','Compact for synthetic'],cons:['Summer-only warmth','Limited US availability'],note:'Lightest Carinthia synthetic. Compact summer choice.'},
+    {n:'Valandre Swing CO 450',t:'hooded',weight:920,temp:0,eur:520,fill:'90/10 duck down 750cuin',ins:'down',euStock:true,sr:{OutDE:{note:'Editor\'s Choice 2024'}},ec:['OutDE'],pros:['OutDE Editor\'s Choice 2024','Pyrenees down, Made in France'],cons:['Premium €520','European-only retail'],note:'OutDE Editor\'s Choice. Pyrenees down. Made in France.'},
+    {n:'Valandre Swing CO 650',t:'hooded',weight:1180,temp:-7,eur:620,fill:'90/10 duck down 750cuin',ins:'down',euStock:true,sr:{OutDE:{note:'Price-Performance Winner'}},ec:['OutDE'],pros:['OutDE Price-Performance Winner','Warmer Valandre option','Made in France'],cons:['Expensive at €620','Heavier than UL alternatives'],note:'OutDE Price-Performance Winner. Warmer Valandre option.'},
+    {n:'Grüezi Bag Biopod Downwool Hybrid',t:'hooded',weight:1450,temp:-8,eur:520,fill:'600g 800+ goose down + wool',ins:'down',euStock:true,sr:{OutDE:{note:'Bullseye 2025'}},ec:['OutDE'],pros:['OutDE Bullseye 2025','Innovative wool layer prevents condensation','Swiss design'],cons:['Heavy 1.45kg','Premium €520'],note:'Innovative wool layer prevents condensation. Swiss design.'},
+    {n:'Alpkit Cloud Peak 300',t:'hooded',weight:840,temp:-3,eur:120,fill:'650fp duck down',ins:'down',euStock:true,sr:{Alp:{rating:4.7,count:189}},ec:[],pros:['Budget 3-season UK down','4.7★/189 Alpkit buyers','Often £100 deals'],cons:['Limited stock periods','No major editorial endorsements'],note:'Budget 3-season UK down option, often £100 deals.'},
+    {n:'Therm-a-Rest Parsec 20',t:'hooded',weight:765,temp:-7,eur:415,fill:'800fp Nikwax down',ins:'down',euStock:true,sr:{Berg:{}, REI:{rating:4.6,count:54}},ec:[],pros:['European-friendly UL','Strong shop signal','Nikwax-treated down'],cons:['Slim cut','Premium price'],note:'European-friendly UL with strong shop signal.'},
+    {n:'Therm-a-Rest Parsec 0',t:'hooded',weight:1100,temp:-15,eur:495,fill:'900fp hydrophobic duck down',ins:'down',euStock:true,sr:{BPK:{note:'Lightest 0°F bag'}, Berg:{}},ec:['BPK'],pros:['Backpacker 2026: lightest 0°F bag tested','Updated to 900fp duck down'],cons:['Not warmest 0°F option','Premium price'],note:'Backpacker 2026: lightest 0°F tested. Updated to 900fp duck.'},
+    {n:'WM Bristlecone MF -10',t:'hooded',weight:1640,temp:-25,eur:840,fill:'850+ goose down',ins:'down',euStock:false,sr:{BPK:{note:'Best Cold Weather 2026'}},ec:['BPK'],pros:['Backpacker Best Cold Weather 2026','Tested at -40°F in Alaska','Buy-once durability'],cons:['€840 — very expensive','Heavy 1.6kg','Overkill for most users'],note:'Backpacker Best Cold Weather. Tested -40°F in Alaska.'},
+    {n:'Marmot Mad River 0',t:'hooded',weight:1820,temp:-15,eur:280,fill:'650fp down',ins:'down',euStock:false,sr:{BPK:{note:'Best Affordable Winter'}},ec:['BPK'],pros:['Backpacker Best Affordable Winter','1/3 cost of premium picks'],cons:['Heavy at 4lbs+','Bulky as bear can'],note:'Backpacker entry-level winter pick. 1/3 cost of premium picks.'},
+    {n:'NEMO Sonic 0',t:'hooded',weight:1450,temp:-15,eur:480,fill:'800fp goose down',ins:'down',euStock:false,sr:{BPK:{note:'Most versatile winter'}},ec:[],pros:['More versatile than Mad River','Cuts 13oz over budget winter picks'],cons:['€480 — pricey','Not as affordable as alternatives'],note:'Backpacker: more versatile than Mad River but $200 more.'},
+    {n:'WM SummerLite',t:'hooded',weight:540,temp:0,eur:480,fill:'850+ goose down',ins:'down',euStock:false,sr:{TR:{note:'Best Ultralight'}, OGL:{}},ec:['TR'],pros:['Treeline Best Ultralight','540g, 32°F','American-made quality'],cons:['Summer-only warmth','Premium €480'],note:'Treeline Best UL. 540g, 32°F. American-made.'},
+    {n:'FF Lark 10 UL',t:'hooded',weight:850,temp:-12,eur:600,fill:'950+ goose down',ins:'down',euStock:false,sr:{TR:{note:'Best Cold Weather'}},ec:['TR'],pros:['Treeline Best Cold Weather','Made-in-Seattle premium','950fp goose down'],cons:['€600 — expensive','Limited EU availability'],note:'Treeline Best Cold Weather. Made-in-Seattle premium.'},
+    {n:'Kelty Galactic 30',t:'hooded',weight:1640,temp:-1,eur:155,fill:'550fp duck down',ins:'down',euStock:false,sr:{OL:{note:'Best Car Camping'}, OGL:{}, REI:{rating:4.6,count:128}, Amz:{rating:4.5,count:467}},ec:['OL'],pros:['Outdoor Life Best Car Camping','Wide rectangular shape with down','4.6★/128 REI buyers'],cons:['550fp down only','Best for under-6\' campers'],note:'Outdoor Life Best Car Camping. Wide rectangular down.'},
+    {n:'Kelty Wayback 20',t:'hooded',weight:1500,temp:-7,eur:120,fill:'synthetic',ins:'synthetic',euStock:false,sr:{Out:{note:'Comfiest 2025'}, REI:{rating:4.5,count:34}},ec:['Out'],pros:['Outside Online Comfiest 2025','Wider mummy for movers'],cons:['Synthetic bulkier than down','Limited cold-weather use'],note:'Outside Online Comfiest pick 2025. Wider mummy.'},
+    {n:'Sea to Summit Hamelin 30',t:'hooded',weight:1100,temp:-1,eur:175,fill:'synthetic',ins:'synthetic',euStock:true,sr:{GJ:{note:'Best budget synthetic'}},ec:[],pros:['GearJunkie best budget synthetic','PNW-tested ventilation options'],cons:['€176 still pricey for synthetic','GJ prefers REI Trailmade for value'],note:'GearJunkie best budget synthetic. PNW tested.'},
+    {n:'Coleman Brazos 20',t:'hooded',weight:2700,temp:-7,eur:55,fill:'TechLoft synthetic',ins:'synthetic',euStock:false,sr:{OGL:{note:'Long-running budget'}, Amz:{rating:4.5,count:8420}},ec:[],pros:['OGL: stood test of time','4.5★/8420 Amazon — huge sample'],cons:['Very heavy 2.7kg','Synthetic budget-tier'],note:'OGL: stood test of time. Bryce Canyon tested.'},
+    {n:'Mountain Hardwear Bozeman 15',t:'hooded',weight:1450,temp:-7,eur:185,fill:'synthetic',ins:'synthetic',euStock:false,sr:{BPK:{note:'Best Budget 3-season (older list)'}},ec:[],pros:['Backpacker (older list) Best Budget 3-season','"Sarcophagus" comfort'],cons:['Older review, may be discontinued','Limited current EU stock'],note:'Backpacker 2023 best budget. "Sarcophagus" comfort.'},
+    {n:'L.L. Bean Classic Camp Sleeping Bag 40°F',t:'hooded',weight:2300,temp:4,eur:115,fill:'synthetic',ins:'synthetic',euStock:false,sr:{BPK:{note:'Best Frontcountry-Hike Hybrid'}},ec:[],pros:['Backpacker Best Frontcountry-Hike Hybrid','Spacious rectangular'],cons:['Heavy 2.3kg','US-only retail'],note:'Backpacker pick. Spacious rectangular.'},
+    {n:'Zenbivy Light Bed 25F',t:'quilt',weight:980,temp:-4,eur:425,fill:'650fp duck down',ins:'down',euStock:false,sr:{BPK:{note:'For the Quilt-Curious'}, TR:{note:'Side-sleeper friendly'}},ec:[],pros:['Backpacker For Quilt-Curious','Treeline Side-sleeper friendly','Sheet-clip system seals drafts'],cons:['Two-piece system more complex','Not the lightest quilt option'],note:'Backpacker + Treeline both pick. Sheet-clip system seals drafts.'},
+    {n:'Katabatic Palisade 30',t:'quilt',weight:570,temp:-1,eur:430,fill:'850fp goose down',ins:'down',euStock:false,sr:{TR:{note:'Best Quilt'}},ec:['TR'],pros:['Treeline Best Quilt','Best draft management','Ethical Allied Down sourcing'],cons:['Cottage brand longer lead times','Limited EU stock'],note:'Treeline best quilt. Best draft management.'},
+    {n:'NEMO Disco Endless Promise 15',t:'hooded',weight:1220,temp:-4,eur:295,fill:'650fp goose down',ins:'down',euStock:false,sr:{BPK:{note:'Most Sustainable'}, REI:{rating:4.6,count:189}},ec:['BPK'],pros:['Backpacker Most Sustainable','Recyclable single-material design','Spoon shape for side sleepers'],cons:['Heavy 1.2kg','Premium €295'],note:'Backpacker Most Sustainable. Recyclable single-material.'},
+    {n:'Forclaz MT500 -5°C',t:'hooded',weight:1670,temp:0,eur:90,fill:'synthetic',ins:'synthetic',euStock:true,sr:{AdV:{}, OM:{note:'Best budget cold weather'}, Dec:{rating:4.6,count:842}},ec:['OM'],pros:['Advnture + OM editor pick budget cold-weather','4.6★/842 Decathlon buyers','€90 — exceptional value'],cons:['Heavy 1.7kg','Synthetic packs bulky'],note:'OM editor pick for cold-weather budget.'},
+    {n:'Snugpak Softie 3 Solstice',t:'hooded',weight:900,temp:5,eur:145,fill:'Softie Premier synthetic',ins:'synthetic',euStock:true,sr:{AdV:{note:'Hard-wearing'}, MK:{rating:4.7,count:189}},ec:[],pros:['Compact synthetic UK option','British-made'],cons:['Comfort rating optimistic','Limited editorial coverage'],note:'British military synthetic. Optimistic ratings.'},
+    {n:'Forclaz MT900 10°C down',t:'hooded',weight:600,temp:10,eur:135,fill:'800fp duck down',ins:'down',euStock:true,sr:{T3:{}, Dec:{rating:4.6,count:436}},ec:[],pros:['Decathlon UL down option','European stock'],cons:['Limited editorial coverage','Decathlon-only'],note:'Real down at synthetic prices.'},
+    {n:'Snugpak Softie 6 Kestrel',t:'hooded',weight:1300,temp:0,eur:175,fill:'Softie Premier synthetic',ins:'synthetic',euStock:true,sr:{MK:{rating:4.8,count:267}},ec:[],pros:['UK-made synthetic 3-season'],cons:['Heavy','Comfort rating optimistic'],note:'British military 3-season synthetic.'},
+    {n:'Marmot Trestles Elite Eco 20',t:'hooded',weight:1710,temp:0,eur:175,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{CH:{note:'Best synthetic'}, LFTO:{note:'Best 3-season synthetic'}, REI:{rating:4.8,count:32}, Amz:{rating:4.5,count:312}},ec:['CH','LFTO'],pros:['CleverHiker AT-tested','LFTO Best 3-season synthetic','OL: best eco-friendly option'],cons:['Heavy 1.7kg','Synthetic packs bulkier than down'],note:'CleverHiker thru-hiked AT. LFTO best 3-season synthetic.'},
+    {n:'Forclaz MT900 0°C down',t:'hooded',weight:900,temp:0,eur:180,fill:'800fp duck down',ins:'down',euStock:true,sr:{T3:{note:'Best Value'}, Dec:{rating:4.7,count:518}},ec:['T3'],pros:['Decathlon down option for 3-season','European stock'],cons:['Limited editorial coverage','Decathlon-only retail'],note:'European mid-tier UL at half price.'},
+    {n:'Kelty Cosmic Down 20',t:'hooded',weight:1190,temp:-1,eur:185,fill:'550fp duck down',ins:'down',euStock:false,sr:{TT:{}, OM:{note:'Best budget overall'}, BPK:{note:'Best Budget Bag'}, SB:{note:'favorite budget down'}, REI:{rating:4.4,count:467}, Amz:{rating:4.5,count:892}},ec:['OM','BPK'],pros:['OM + Backpacker + Switchback all pick best budget down','€185 with 550fp duck down'],cons:['Lower 550fp = bulkier than premium','Heavy 1.2kg'],note:'Triple-source budget winner: OM, Backpacker, Switchback all pick this.'},
+    {n:'Alpkit PipeDream 200',t:'hooded',weight:545,temp:7,eur:195,fill:'750fp duck down',ins:'down',euStock:true,sr:{CF:{}, Alp:{rating:4.7,count:284}},ec:[],pros:['Lightest Alpkit UK down option','4.7★/76 Alpkit buyers'],cons:['Summer-only warmth','UK-only retail'],note:'UK summer ultralight on a budget.'},
+    {n:'Snugpak Softie Elite 4',t:'hooded',weight:1700,temp:-7,eur:220,fill:'Softie Premier synthetic',ins:'synthetic',euStock:true,sr:{MK:{rating:4.6,count:142}},ec:[],pros:['UK-made 3-season synthetic'],cons:['Limited editorial coverage','Comfort rating optimistic'],note:'Snugpak 4-season with EPS expander.'},
+    {n:'Snugpak Softie 10 Harrier',t:'hooded',weight:1815,temp:-5,eur:215,fill:'Softie Premier synthetic',ins:'synthetic',euStock:true,sr:{MK:{rating:4.7,count:178}},ec:[],pros:['UK-made cold-weather synthetic'],cons:['Heavy','Comfort rating optimistic'],note:'Heavy military synthetic for cold UK.'},
+    {n:'Alpkit PipeDream 400',t:'hooded',weight:865,temp:-4,eur:230,fill:'750fp duck down',ins:'down',euStock:true,sr:{T3:{note:"Hiker's dream"}, CF:{note:'Top budget down'}, MMG:{}, Alp:{rating:4.8,count:619}},ec:['T3'],pros:['T3 Best 3-season UK down','4.8★/142 Alpkit buyers','£230 value'],cons:['UK-only retail','Limited stock periods'],note:'Most-recommended UK 3-season down.'},
+    {n:'Exped Terra 15',t:'hooded',weight:1500,temp:-3,eur:240,fill:'650fp goose down',ins:'down',euStock:true,sr:{CH:{note:'Budget Buy'}, REI:{rating:4.5,count:18}},ec:['CH'],pros:['Swiss precision construction','European stock'],cons:['No major editorial endorsements','Bulky for the warmth'],note:'Heavy but full-featured.'},
+    {n:'NEMO Disco 15 EP',t:'hooded',weight:1220,temp:-4,eur:275,fill:'650fp goose down',ins:'down',euStock:false,sr:{CH:{note:'Roomiest'}, REI:{rating:4.6,count:189}, Amz:{rating:4.6,count:98}},ec:[],pros:['OM tested in Cairngorms','Side-sleeper spoon shape'],cons:['Heavy 1.26kg','Bulky vs UL options'],note:'Spoon shape for side sleepers.'},
+    {n:'MH Bishop Pass 15',t:'hooded',weight:1050,temp:-4,eur:310,fill:'650fp goose down',ins:'down',euStock:false,sr:{OGL:{note:'Best Buy / Best Budget Backpacking'}, CH:{note:'Affordable down'}, REI:{rating:4.6,count:78}},ec:['OGL'],pros:['OGL Best Buy 2025/2026','CleverHiker affordable down pick','Crossover budget-to-serious'],cons:['650fp only — bulkier than premium','Heavy at 1.05kg'],note:'OGL Best Buy 2025/2026. Crossover budget-to-serious.'},
+    {n:'EE Enigma 20',t:'quilt',weight:600,temp:-7,eur:325,fill:'850fp goose down',ins:'down',euStock:false,sr:{SB:{note:'Best quilt'}, CH:{note:'Best quilt'}, TT:{note:'AT/PCT favorite'}, BP:{}},ec:['SB','CH'],pros:['Cottage-brand custom quilt','Multiple length/width options'],cons:['No hood — needs cap','Cottage lead times'],note:'Most popular thru-hike quilt.'},
+    {n:'Alpkit PipeDream 600',t:'hooded',weight:1085,temp:-10,eur:330,fill:'750fp duck down',ins:'down',euStock:true,sr:{TGO:{}, Alp:{rating:4.8,count:412}},ec:[],pros:['Warmest Alpkit down','4.8★/93 Alpkit buyers','Cold-weather UK value'],cons:['UK-only retail','Heavy 1.05kg'],note:'Best-value true winter bag.'},
+    {n:'OV StormLoft 15',t:'quilt',weight:695,temp:-9,eur:335,fill:'800fp duck DWR',ins:'down',euStock:false,sr:{iRF:{note:'Best budget UL quilt'}},ec:[],pros:['Cottage UL builder','Custom sizing'],cons:['Cottage lead times','Limited editorial coverage'],note:'Cheapest UL quilt with DWR.'},
+    {n:'EE Revelation 20',t:'quilt',weight:640,temp:-7,eur:340,fill:'850fp goose down',ins:'down',euStock:false,sr:{CH:{}, SH:{}, TS:{}, AA:{}, BP:{}},ec:[],pros:['Iconic UL quilt','Multiple size/fill options'],cons:['Top zip awkward for some','Cottage lead times'],note:'Versatile quilt with footbox zip.'},
+    {n:'NEMO Riff 15',t:'hooded',weight:1135,temp:-4,eur:355,fill:'800fp goose down',ins:'down',euStock:false,sr:{TT:{}, REI:{rating:4.7,count:142}},ec:[],pros:['Spoon shape for side sleepers','Thermo Gill vents'],cons:['Heavy 1.05kg','Bulky vs UL options'],note:'Recyclable spoon-shape mummy.'},
+    {n:'REI Magma 15',t:'hooded',weight:1010,temp:-6,eur:365,fill:'850fp goose down',ins:'down',euStock:false,sr:{CH:{note:'Best value'}, TT:{}, SB:{note:'Best Overall'}, BPK:{note:'Best Sizing Options'}, TR:{note:'Best Affordable'}, Out:{note:'"Boss of mummy bags"'}, REI:{rating:4.6,count:234}},ec:['CH','SB','TR'],pros:['Treeline Best Affordable + Switchback Best Overall','Outside calls it "boss of mummy bags"','Backpacker Best Sizing Options'],cons:['Some odor pickup over time','Premium €365'],note:'Most-endorsed mid-tier bag: SB + Treeline + Outside + Backpacker.'},
+    {n:'EE Convert 20',t:'quilt',weight:770,temp:-7,eur:380,fill:'850fp goose DWR',ins:'down',euStock:false,sr:{iRF:{note:'Quilt runner-up'}, OGL:{}},ec:[],pros:['Quilt + sleeping bag hybrid','Convertible neck closure'],cons:['Cottage lead times','More complex than pure quilt'],note:'Hybrid quilt, more egg-shaped.'},
+    {n:'WM HighLite',t:'hooded',weight:460,temp:2,eur:400,fill:'850+ goose down',ins:'down',euStock:false,sr:{iRF:{note:'Lightest UL'}, OGL:{}, Amz:{rating:4.7,count:98}},ec:[],pros:['American-made minimalist UL','Long service life'],cons:['Limited shop signals — niche product','Premium price'],note:'Summer-only UL benchmark.'},
+    {n:'S2S Spark 30',t:'hooded',weight:495,temp:-1,eur:410,fill:'850+ goose down',ins:'down',euStock:true,sr:{iRF:{}, OGL:{note:"Editors' Choice"}, SB:{note:'Top UL pick 2026'}, BHS:{}, REI:{rating:4.8,count:67}, Amz:{rating:4.6,count:147}},ec:['OGL','SB'],pros:['Switchback Top UL Pick 2026','OGL Editor\'s Choice','495g, packs to <1L Nalgene'],cons:['Limited cold-weather range','Half-zip restricts ventilation'],note:'Switchback top UL pick 2026 + OGL Editor\'s Choice.'},
+    {n:'Montbell Down Hugger 800 #2',t:'hooded',weight:645,temp:-4,eur:420,fill:'800fp goose down',ins:'down',euStock:true,sr:{iRF:{note:'Hooded UL runner-up'}},ec:[],pros:['Stretch-baffle design follows movement','Premium 800fp'],cons:['Hard to find in EU','Limited Western retail'],note:'Stretchy spiderweb baffle.'},
+    {n:'Zpacks Classic 20',t:'hoodless',weight:580,temp:-7,eur:420,fill:'900fp duck down',ins:'down',euStock:false,sr:{iRF:{note:'Lightest 20F'}, CH:{}, BP:{}},ec:['CH'],pros:['Hoodless saves weight','Bottom zip retains heat','Cottage UL favorite'],cons:['No hood — needs cap','Cottage lead times','Premium price'],note:'Lightest 20°F bag tested.'},
+    {n:'Katabatic Alsek 22',t:'quilt',weight:670,temp:-6,eur:440,fill:'900fp goose down',ins:'down',euStock:false,sr:{iRF:{note:'Best UL quilt'}, BP:{}},ec:['iRF'],pros:['22°F warmer cousin to Palisade','Bluesign-approved + RDS down'],cons:['Cottage lead times','Premium price'],note:'Best draft management of any quilt.'},
+    {n:'S2S Spark 15',t:'hooded',weight:730,temp:-3,eur:505,fill:'850fp goose down',ins:'down',euStock:true,sr:{OGL:{note:'Top UL luxury'}, CH:{}, BT:{}, BHS:{}, REI:{rating:4.8,count:51}, Amz:{rating:4.5,count:124}},ec:['CH'],pros:['Cold-weather UL with shop validation','850+ goose down'],cons:['Limited editorial coverage','Premium €490'],note:'Mid-priced premium with strong shop signal.'},
+    {n:'FF Hummingbird UL 30',t:'hooded',weight:545,temp:-1,eur:505,fill:'950+ goose down',ins:'down',euStock:false,sr:{OGL:{note:'Highest-rated'}, SB:{note:'Best Ultralight'}, SH:{}, OGL:{note:'Best UL backpacking'}},ec:['SB','OGL'],pros:['Switchback + OGL Best Ultralight','OGL highest-rated','545g warmth'],cons:['Snug fit restricts movers','Premium €505'],note:'Switchback + OGL agree: Best Ultralight pick.'},
+    {n:'FF Flicker UL 20',t:'hoodless',weight:730,temp:-7,eur:515,fill:'950+ goose down',ins:'down',euStock:false,sr:{iRF:{note:'Best hoodless'}, SB:{note:'Best hybrid'}},ec:['iRF','SB'],pros:['Convertible quilt/bag hybrid','Made-in-Seattle premium'],cons:['Limited editorial coverage','Premium price'],note:'Most versatile design tested.'},
+    {n:'WM MegaLite',t:'hooded',weight:680,temp:-1,eur:560,fill:'850+ goose down',ins:'down',euStock:false,sr:{OGL:{note:"Editor's Choice"}, TS:{}, TGv:{}, REI:{rating:5.0,count:1}, Amz:{rating:4.8,count:203}},ec:['OGL'],pros:['OGL Editor\'s Choice','20+ year service life','Generous dimensions'],cons:['Plain expensive €560','Hood closure awkward'],note:'OGL Editor\'s Choice. 20+ year service life.'},
+    {n:'S2S Spark 0',t:'hooded',weight:1115,temp:-12,eur:580,fill:'850+ goose down',ins:'down',euStock:true,sr:{REI:{rating:4.6,count:65}},ec:[],pros:['Cold-weather UL with shop validation','4.6★/65 REI buyers'],cons:['Limited editorial coverage','Premium €580'],note:'Cold-weather UL with shop validation.'},
+    {n:'FF Swallow UL 20',t:'hooded',weight:740,temp:-7,eur:605,fill:'950+ goose down',ins:'down',euStock:false,sr:{iRF:{note:'Warmest UL'}, SB:{}, CH:{}, SH:{}, BT:{}, TT:{}, GJ:{}, SuB:{}, TR:{note:'Best Overall Mens'}, BPK:{note:'Best Inclement Weather'}},ec:['iRF','SB','CH','SH','TR','BPK'],pros:['Strongest cross-source consensus: 10 sources, 6 picks','iRunFar Warmest UL','Treeline Best Overall + Backpacker Best Inclement Weather'],cons:['Premium €605','Limited EU availability'],note:'Strongest cross-source consensus: 10 sources, 6 editor picks.'},
+    {n:'WM UltraLite 20',t:'hooded',weight:820,temp:-7,eur:605,fill:'850+ goose down',ins:'down',euStock:false,sr:{OGL:{note:'Best cold-weather'}, SB:{}, CH:{}, SH:{}, Amz:{rating:4.8,count:178}},ec:['CH'],pros:['OGL Best cold-weather pick','CleverHiker endorsement','4.8★/178 Amazon'],cons:['Premium €605','Made-in-USA limits EU stock'],note:"OGL's pick for colder 3-season."},
+    {n:'MH Phantom 0',t:'hooded',weight:1210,temp:-11,eur:715,fill:'850fp goose down',ins:'down',euStock:false,sr:{CH:{note:'Best winter'}},ec:['CH'],pros:['CleverHiker Best winter','850fp goose down','Mountaineering-grade'],cons:['€715 — most expensive','Heavy at 1.21kg'],note:'Premium winter option.'},
+    {n:'Ferrino Lightec 800 Duvet',t:'hooded',weight:760,temp:-2,eur:215,fill:'550fp duck down (RDS)',ins:'down',euStock:true,sr:{Trk:{rating:4.5,count:142}},ec:[],pros:['Italian brand, strong EU retail','RDS-certified down','3D foot-area shape','One Touch hood adjustment'],cons:['Only 550fp — bulkier than premium','Limited US/UK editorial coverage'],note:'Italian since 1870. Recycled GRS-certified shells.'},
+    {n:'Ferrino Lightec SM 1100',t:'hooded',weight:1100,temp:-3,eur:130,fill:'HTF Compact synthetic',ins:'synthetic',euStock:true,sr:{Trk:{rating:4.4,count:89}},ec:[],pros:['€130 budget mountaineering','Italian build quality','One Touch + 2-way zip','EN/ISO 23537 tested'],cons:['Heavy 1.1kg','Synthetic packs bulky','Limited editorial coverage'],note:'Italian-made shingle-tile synthetic.'},
+    {n:'Ferrino Lightec 1400 Duvet',t:'hooded',weight:1480,temp:-7,eur:330,fill:'550fp goose down (RDS)',ins:'down',euStock:true,sr:{},ec:[],pros:['Italian expedition-grade','RDS goose down','Full feature set'],cons:['Heavy 1.48kg for the temp rating','Only 550fp loft'],note:'Ferrino expedition winter option.'},
+    {n:'Pajak Radical 4Z',t:'hooded',weight:720,temp:-7,eur:520,fill:'900fp Polish goose down',ins:'down',euStock:true,sr:{UOG:{note:'TOP PICK: exceptional all-season'}, AlpT:{note:'Customer-tested'}, Brg:{rating:4.7,count:34}, Bfr:{note:'Reviewed'}},ec:['UOG'],pros:['UOG TOP PICK','900fp Polish white goose down (RDS)','Z-baffle eliminates cold spots','Made-in-Poland; Pacific-tested by K. Kielar'],cons:['€520 premium price','Limited US distribution'],note:'Polish premium. Z-construction angled baffles.'},
+    {n:'Pajak Radical 1Z',t:'hooded',weight:430,temp:0,eur:440,fill:'900fp Polish goose down',ins:'down',euStock:true,sr:{UOG:{note:'TOP PICK: spring/summer UL'}},ec:['UOG'],pros:['UOG TOP PICK summer/spring','430g — UL summer down','900fp RDS Polish white goose'],cons:['Summer/early autumn only','Premium €440'],note:'Lightweight Pajak for warm-weather UL.'},
+    {n:'Pajak Radical ULZ',t:'hooded',weight:362,temp:5,eur:380,fill:'900fp Polish goose down',ins:'down',euStock:true,sr:{UOG:{note:'TOP PICK ultralight'}},ec:['UOG'],pros:['Just 362g — ultralight','900fp expedition-grade down','Humidity Management System'],cons:['Comfort only +5°C','Pricey €380'],note:'Simplified UL design — Pajak\'s lightest.'},
+    {n:'PHD Minim 400',t:'hooded',weight:580,temp:-5,eur:340,fill:'900fp goose down',ins:'down',euStock:true,sr:{TGO:{}},ec:[],pros:['UK-made by PHD (Cheshire)','900fp custom down','Multi-year owner satisfaction'],cons:['Premium price','3+ week custom lead time','Sticky zip noted in reviews'],note:'PHD custom UK ultralight. Treated down optional.'},
+    {n:'PHD M.Degree 400 K',t:'hooded',weight:520,temp:-7,eur:520,fill:'1000fp goose down',ins:'down',euStock:true,sr:{TGO:{note:'Best warmth-to-weight'}},ec:['TGO'],pros:['TGO Best warmth-to-weight pick','UK-made fully custom-fitted','1000fp top-tier down','>95% European-sourced materials'],cons:['Eye-watering €520+ price','Hood lacks baffles','Narrow fit may restrict legs'],note:'PHD custom premium — TGO endorsed.'},
+    {n:'PHD Hispar 400',t:'hooded',weight:870,temp:-12,eur:540,fill:'900fp goose down',ins:'down',euStock:true,sr:{},ec:[],pros:['UK-made winter expedition','900fp Polish down','Custom sizing'],cons:['Premium price','UK-only retail (cottage)'],note:'PHD winter line. Used on polar expeditions.'},
+    {n:'Y by Nordisk Passion One',t:'hooded',weight:265,temp:5,eur:550,fill:'900fp Crystal Down (Polish)',ins:'down',euStock:true,sr:{OM:{note:'red dot design award'}, Brg:{rating:4.7,count:67}},ec:['OM'],pros:['265g — among lightest sleeping bags ever made','Red dot design award winner','900fp Crystal Down (traceable Polish geese)','Hand-made in Germany'],cons:['Premium €550','Only +5°C comfort — summer/MdS-style use','Niche product, limited stock'],note:'Formerly Yeti Passion One. MdS desert ultra-marathoners\' favorite.'},
+    {n:'Y by Nordisk Passion Five',t:'hooded',weight:730,temp:-2,eur:620,fill:'900fp Crystal Down (Polish)',ins:'down',euStock:true,sr:{Brg:{rating:4.7,count:34}},ec:[],pros:['Made-in-Germany premium','900fp Crystal Down','Solid cold protection at <800g'],cons:['Premium €620','Limited US distribution'],note:'Warmest Y by Nordisk Passion. -2°C comfort at 730g.'},
+    {n:'Cumulus Quilt 350',t:'quilt',weight:485,temp:0,eur:295,fill:'850fp Polish goose down',ins:'down',euStock:true,sr:{},ec:[],pros:['Polish premium quilt brand','850fp Polish goose down (ethical)','Pertex Quantum + Toray fabrics','Open-bottom design'],cons:['No hood — needs cap','EU-direct only (cottage scale)'],note:'Cumulus Polish-made quilt. Mattress-strap system.'},
+    {n:'Cumulus Lite Line 400',t:'hooded',weight:780,temp:-5,eur:440,fill:'850fp Polish goose down',ins:'down',euStock:true,sr:{},ec:[],pros:['Polish premium','850fp Polish goose down','3-season mummy at <800g'],cons:['EU-direct only','Limited editorial coverage'],note:'Cumulus mummy classic. Strong loyalty in EU UL community.'},
+    {n:'Mammut Comfort Down -5C',t:'hooded',weight:1390,temp:-5,eur:340,fill:'700fp goose down (RDS)',ins:'down',euStock:true,sr:{LFTO:{note:'Great all-rounder'}, Brg:{rating:4.6,count:23}},ec:['LFTO'],pros:['LFTO 2025 review: comfortable, versatile','Practical centre-zip design','Strong Mammut sustainability creds','RDS-certified down'],cons:['Heavy 1.39kg','Pricey for 700fp loft'],note:'Swiss Mammut. Centre-zip for easy entry.'},
+    {n:'Mammut Perform Down -7C',t:'hooded',weight:1140,temp:-7,eur:380,fill:'800fp goose down (RDS)',ins:'down',euStock:true,sr:{TGO:{note:'Different yet comfortable approach'}},ec:[],pros:['TGO reviewed favorably','800fp RDS down','3-season Alpine focus'],cons:['Centre-zip layout takes adjustment','Premium €380'],note:'Mammut Performance line. Alpine-focused cut.'},
+    {n:'Mammut Relax Fiber Bag -2C',t:'hooded',weight:1700,temp:-2,eur:155,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{AdV:{note:'Whimsical & versatile'}},ec:[],pros:['Advnture: comfortable, versatile','Mammut quality at synthetic price','Great for casual camping'],cons:['Heavy 1.7kg','Synthetic only — bulky packed','Not for serious backpacking'],note:'Mammut\'s casual-camping synthetic.'},
+    {n:'Salewa Diadem Warm',t:'hooded',weight:1320,temp:-5,eur:295,fill:'700fp goose down (RDS)',ins:'down',euStock:true,sr:{},ec:[],pros:['Italian Alpine specialist','RDS goose down','3-season Alpine fit'],cons:['Heavy 1.32kg','Limited US/UK editorial coverage'],note:'Salewa Italian Alpine brand.'},
+    {n:'Vaude Sioux 800 II',t:'hooded',weight:1500,temp:6,eur:130,fill:'recycled synthetic',ins:'synthetic',euStock:true,sr:{},ec:[],pros:['German green-credentials brand','Recycled materials','Wide retail across EU'],cons:['Summer-rated only','Heavy 1.5kg','Limited cold-weather use'],note:'Vaude German eco-focused. PrimaLoft synthetic.'},
+    {n:'Cumulus Panyam 450',t:'hooded',weight:840,temp:-5,eur:415,fill:'850fp Polish goose down',ins:'down',euStock:true,sr:{},ec:[],pros:['Polish premium 3-season','850fp Polish goose down','Strong UL community following'],cons:['EU-direct only','Limited US distribution'],note:'Cumulus mummy. Cottage premium.'},
+    {n:'Jack Wolfskin Smoozip +3',t:'hooded',weight:1160,temp:7,eur:90,fill:'TexaTherm Core synthetic',ins:'synthetic',euStock:true,sr:{Amz:{rating:4.5,count:387}},ec:[],pros:['Wide EU/Baltic retail availability','S-shape ergonomic zip','PFC-free synthetic','€90 budget summer option','Opens flat as a quilt'],cons:['Heavy 1.16kg','Summer-only +7°C comfort','S-zip can feel claustrophobic at top'],note:'German mainstream brand. Innovative S-zip gimmick.'},
+    {n:'Jack Wolfskin Smoozip -5',t:'hooded',weight:1890,temp:1,eur:140,fill:'TexaTherm Core synthetic',ins:'synthetic',euStock:true,sr:{AT:{note:'Good value for car camping'}, Amz:{rating:4.4,count:215}},ec:[],pros:['Active-Traveller: good value for car camping','Generous size, fleece-lined head/feet','€140 — cheapest 3-season tested','Builds heat fast'],cons:['Very heavy 1.89kg','Bulky packed (44×25cm)','S-zip claustrophobic when fully closed','Body & feet feel narrow'],note:'JW heavier 3-season. Car camping only.'},
+    {n:'Fjällräven Move-In',t:'hooded',weight:680,temp:5,eur:280,fill:'700fp goose down + 600fp legs',ins:'down',euStock:true,sr:{BPK:{note:'30+ nights tester pick (warm-weather)'}},ec:['BPK'],pros:['Backpacker 30+ night tester approval','Wraparound zip → opens as blanket','Hybrid 700/600fp construction packs small','Wide shoulders for broad sleepers'],cons:['Premium €280 for +5°C bag','Discontinued in some markets','Summer-only warmth'],note:'Swedish heritage brand. Convertible blanket-mode.'},
+    {n:'Fjällräven Polar -30',t:'hooded',weight:2150,temp:-22,eur:870,fill:'90/10 goose down',ins:'down',euStock:true,sr:{BPK:{note:'Best night sleep in mummy — Ghost Wilderness tester'}, Brg:{rating:4.6,count:18}},ec:['BPK'],pros:['Backpacker tester: "Best night\'s sleep in a mummy"','Genuine Arctic-grade -22°C / -30°C extreme','Side "escape hatch" zipper for sit-up','Detachable synthetic fur collar','Backup buttons if zip fails'],cons:['€870 — premium price','Heavy 2.15kg','Massive packed size','Overkill for most users'],note:'The bag from Fjällräven Polar dogsledding event (Estonia\'s Katrina Sokk used this).'},
+    {n:'Fjällräven Polar -20',t:'hooded',weight:1900,temp:-12,eur:720,fill:'800fp goose down',ins:'down',euStock:true,sr:{Brg:{rating:4.7,count:12}},ec:[],pros:['Arctic-rated 800fp goose down','Side ventilation zip','Strong Bergfreunde shop signal'],cons:['€720 premium','Heavy 1.9kg','Limited editorial coverage'],note:'Lighter Polar series option.'},
+    {n:'Fjällräven Move With',t:'hooded',weight:1500,temp:-2,eur:340,fill:'700fp goose down + synthetic',ins:'down',euStock:true,sr:{},ec:[],pros:['Hybrid down/synthetic — handles damp','Swedish brand quality','Three-season versatility'],cons:['Heavy for the temp rating','Limited editorial coverage'],note:'Hybrid Move-series for damp Nordic conditions.'}
+  ];
 
-function getCropPrice(cropKey) {
-  const el = document.getElementById('crop_price_' + cropKey);
-  if (el) return +el.value;
-  return CROPS[cropKey]._currentPrice || CROPS[cropKey].defaultPrice;
-}
+  const state = {
+    profile:'balanced', currency:'EUR',
+    priceMin:20, priceMax:750, tempMin:-15, tempMax:15, wtMax:4500,
+    type:'all', ins:'all', cons:'0', sort:'score',
+    compare:new Set(), highlight:null, expandShop:false
+  };
+  const DEFAULTS = {priceMin:20, priceMax:750, tempMin:-15, tempMax:15, wtMax:4500, type:'all', ins:'all', cons:'0'};
 
-function computeRow(crop, y, inp) {
-  const c = CROPS[crop];
-  const price = getCropPrice(crop);
-  const fert = c.fertFn(y, inp.npk, inp.nv);
-  const chem = c.chemFn(y);
-  const seed = c.seedFn ? c.seedFn(y) : c.seedHa;
-  // fuelLitres = litres/ha; multiply by user's fuel price €/l
-  const fuel = c.fuelFixed !== undefined ? c.fuelFixed : c.fuelLitres * inp.fuelL;
-  const dryRate = inp.dry * (c.dryMultiplier !== undefined ? c.dryMultiplier : 1.0);
-  const drying = dryRate * y;
-  const transport = inp.trans * y;
-  const varCost = fert + chem + seed + fuel + drying + transport;
-  const totalCost = varCost + inp.fixed;
-  const revenue = y * price + inp.support;
-  const bruto = revenue - varCost;
-  const neto = revenue - totalCost;
-  const breakeven = totalCost / price;
-  const priceBreakeven = y > 0 ? (totalCost - inp.support) / y : null;
-  return { y, price, fert, chem, seed, fuel, drying, transport, varCost, totalCost, revenue, bruto, neto, breakeven, priceBreakeven };
-}
-
-function netoClass(v) {
-  if (v < 0) return 'neto-neg';
-  if (v < 150) return 'neto-warn';
-  return 'neto-pos';
-}
-
-// ─── Render table ─────────────────────────────────────────────────────────────
-
-function renderTable(cropKey, inp) {
-  const c = CROPS[cropKey];
-  document.getElementById('tableTitle').textContent = c.name;
-
-  const head = document.getElementById('tableHead');
-  head.innerHTML = `<tr>
-    <th>Saak t/ha</th>
-    <th>Müügitulu €/ha</th>
-    <th>Väetis €/ha</th>
-    <th>Taimekaitse €/ha</th>
-    <th>Seeme €/ha</th>
-    <th>Kütus €/ha</th>
-    <th>Kuivatus €/ha</th>
-    <th>Transport €/ha</th>
-    <th>Muutuvkulud €/ha</th>
-    <th>Brutokasum €/ha</th>
-    <th>Püsikulud €/ha</th>
-    <th>Netokasum €/ha</th>
-    <th>Hinna BE €/t</th>
-  </tr>`;
-
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '';
-  for (const y of c.yields) {
-    const r = computeRow(cropKey, y, inp);
-    const cls = netoClass(r.neto);
-    tbody.innerHTML += `<tr>
-      <td>${y}</td>
-      <td>${r.revenue.toFixed(0)}</td>
-      <td>${r.fert.toFixed(0)}</td>
-      <td>${r.chem.toFixed(0)}</td>
-      <td>${r.seed}</td>
-      <td>${r.fuel.toFixed(0)}</td>
-      <td>${r.drying.toFixed(0)}</td>
-      <td>${r.transport.toFixed(0)}</td>
-      <td>${r.varCost.toFixed(0)}</td>
-      <td>${r.bruto.toFixed(0)}</td>
-      <td>${inp.fixed}</td>
-      <td class="${cls}">${r.neto > 0 ? '+' : ''}${r.neto.toFixed(0)}</td>
-      <td>${r.priceBreakeven !== null ? r.priceBreakeven.toFixed(1) : '–'}</td>
-    </tr>`;
+  function loadFromHash(){
+    if(!location.hash) return;
+    try {
+      const params = new URLSearchParams(location.hash.slice(1));
+      if(params.has('p')) state.profile = params.get('p');
+      if(params.has('c')) state.currency = params.get('c');
+      if(params.has('pmin')) state.priceMin = +params.get('pmin');
+      if(params.has('pmax')) state.priceMax = +params.get('pmax');
+      if(params.has('tmin')) state.tempMin = +params.get('tmin');
+      if(params.has('tmax')) state.tempMax = +params.get('tmax');
+      if(params.has('w')) state.wtMax = +params.get('w');
+      if(params.has('t')) state.type = params.get('t');
+      if(params.has('i')) state.ins = params.get('i');
+      if(params.has('cons')) state.cons = params.get('cons');
+      if(params.has('s')) state.sort = params.get('s');
+      if(params.has('cmp')) state.compare = new Set(params.get('cmp').split('|').filter(Boolean));
+    } catch(e) {}
   }
-}
-
-// ─── Render chart ─────────────────────────────────────────────────────────────
-
-// ─── Yield line plugin ────────────────────────────────────────────────────────
-const yieldLinePlugin = {
-  id: 'yieldLine',
-  afterDraw(chart) {
-    if (chart._yieldLineX === undefined) return;
-    const ctx2 = chart.ctx;
-    const xScale = chart.scales.x;
-    const yScale = chart.scales.y;
-    // labels are strings like "3.0", find index of closest
-    const target = chart._yieldLineX.toFixed(1);
-    const idx = chart.data.labels.indexOf(target);
-    if (idx < 0) return;
-    const x = xScale.getPixelForValue(idx);
-    ctx2.save();
-    ctx2.beginPath();
-    ctx2.moveTo(x, yScale.top);
-    ctx2.lineTo(x, yScale.bottom);
-    ctx2.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx2.lineWidth = 1.5;
-    ctx2.setLineDash([4, 3]);
-    ctx2.stroke();
-    ctx2.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx2.font = '10px Consolas';
-    ctx2.textAlign = 'center';
-    ctx2.fillText(target + ' t/ha', x, yScale.top - 4);
-    ctx2.restore();
-  }
-};
-
-function updateYieldLine() {
-  if (!profitChart) return;
-  profitChart._yieldLineX = +document.getElementById('yieldSlider').value;
-  profitChart.update('none');
-}
-
-function renderChart(cropKey, inp) {
-  const c = CROPS[cropKey];
-  const min = Math.max(c.yields[0], 1.5);
-  const max = c.sliderMax;
-  const labels = [], revenues = [], totalCosts = [];
-  for (let y = min; y <= max; y += 0.1) {
-    const r = computeRow(cropKey, y, inp);
-    labels.push(y.toFixed(1));
-    revenues.push(+r.revenue.toFixed(0));
-    totalCosts.push(+r.totalCost.toFixed(0));
-  }
-
-  const wrap = document.getElementById('chartWrap');
-  wrap.innerHTML = '<canvas id="profitChart" style="width:100%;height:100%"></canvas>';
-  const ctx = document.getElementById('profitChart').getContext('2d');
-  profitChart = new Chart(ctx, {
-    type: 'line',
-    plugins: [yieldLinePlugin],
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Müügitulu €/ha',
-          data: revenues,
-          borderColor: '#8fce6a',
-          backgroundColor: 'rgba(143,206,106,0.08)',
-          borderWidth: 2.5,
-          pointRadius: 0,
-          fill: false,
-          tension: 0
-        },
-        {
-          label: 'Kogukulu €/ha',
-          data: totalCosts,
-          borderColor: '#c0392b',
-          backgroundColor: 'rgba(192,57,43,0.08)',
-          borderWidth: 2.5,
-          pointRadius: 0,
-          fill: false,
-          tension: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: { color: '#7a8c7e', font: { family: 'Consolas', size: 10 }, boxWidth: 20, padding: 14 }
-        },
-        tooltip: {
-          callbacks: {
-            afterBody: items => {
-              const rev = items[0]?.raw ?? 0;
-              const cost = items[1]?.raw ?? 0;
-              const diff = rev - cost;
-              return ['────────────────', 'Netokasum: ' + (diff > 0 ? '+' : '') + diff + ' €/ha'];
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#7a8c7e', font: { family: 'Consolas', size: 10 }, maxTicksLimit: 12 },
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          title: { display: true, text: 'Saagikus (t/ha)', color: '#7a8c7e', font: { size: 10 } }
-        },
-        y: {
-          ticks: { color: '#7a8c7e', font: { family: 'Consolas', size: 10 },
-            callback: v => v + ' €' },
-          grid: { color: 'rgba(255,255,255,0.06)' },
-          beginAtZero: true,
-          title: { display: true, text: '€/ha', color: '#7a8c7e', font: { size: 10 } }
-        }
-      }
-    }
-  });
-  profitChart._yieldLineX = +document.getElementById('yieldSlider').value;
-}
-
-// ─── Render right panel ───────────────────────────────────────────────────────
-
-function renderPanel(cropKey, inp) {
-  const c = CROPS[cropKey];
-  let y = +document.getElementById('yieldSlider').value;
-
-  // Snap: 0 stays 0, anything below 1.5 snaps to 1.5
-  if (y > 0 && y < 1.5) {
-    y = 1.5;
-    document.getElementById('yieldSlider').value = 1.5;
+  function syncHash(){
+    const p = new URLSearchParams();
+    if(state.profile !== 'balanced') p.set('p', state.profile);
+    if(state.currency !== 'EUR') p.set('c', state.currency);
+    if(state.priceMin !== DEFAULTS.priceMin) p.set('pmin', state.priceMin);
+    if(state.priceMax !== DEFAULTS.priceMax) p.set('pmax', state.priceMax);
+    if(state.tempMin !== DEFAULTS.tempMin) p.set('tmin', state.tempMin);
+    if(state.tempMax !== DEFAULTS.tempMax) p.set('tmax', state.tempMax);
+    if(state.wtMax !== DEFAULTS.wtMax) p.set('w', state.wtMax);
+    if(state.type !== DEFAULTS.type) p.set('t', state.type);
+    if(state.ins !== DEFAULTS.ins) p.set('i', state.ins);
+    if(state.cons !== DEFAULTS.cons) p.set('cons', state.cons);
+    if(state.sort !== 'score') p.set('s', state.sort);
+    if(state.compare.size > 0) p.set('cmp', [...state.compare].join('|'));
+    const h = p.toString();
+    history.replaceState(null, '', h ? '#' + h : location.pathname);
   }
 
-  const isToetus = y === 0;
-  document.getElementById('yieldDisplay').textContent = isToetus ? 'võtan vaid toetuse' : y.toFixed(1) + ' t/ha';
-
-  if (isToetus) {
-    const profEl = document.getElementById('profitDisplay');
-    profEl.className = 'profit-big ' + (inp.support > 0 ? 'neto-warn' : 'neto-neg');
-    profEl.textContent = inp.support > 0 ? '+' + inp.support.toFixed(0) + ' €/ha' : '0 €/ha';
-    document.getElementById('profitUnit').textContent = '€/ha (ainult toetused, saaki pole)';
-    document.getElementById('beVal').textContent = '–';
-    document.getElementById('beValPrice').textContent = '–';
-    document.getElementById('breakdown').innerHTML = `
-      <div class="bline revenue"><span class="bline-label">Müügitulu</span><span class="bline-val">0 €/ha</span></div>
-      ${inp.support > 0 ? `<div class="bline"><span class="bline-label">Toetused</span><span class="bline-val">+${inp.support.toFixed(0)} €/ha</span></div>` : ''}
-      <div class="bline total"><span class="bline-label">Kogutulu</span><span class="bline-val">${inp.support.toFixed(0)} €/ha</span></div>
-    `;
-    const recEl = document.getElementById('recBox');
-    recEl.textContent = 'Põld on toetuse peal. Saaki pole, ainult otsetoetused laekuvad.';
-    recEl.className = 'rec-box warn';
-    return;
+  function fmtMoney(eur){
+    const v = Math.round(eur * RATES[state.currency] / 5) * 5;
+    return SYM[state.currency] + v;
+  }
+  function indieCount(b){ return Object.keys(b.sr).filter(k => SOURCES[k].tier === 'ind').length; }
+  function magCount(b){ return Object.keys(b.sr).filter(k => SOURCES[k].tier === 'mag').length; }
+  function blogCount(b){ return Object.keys(b.sr).filter(k => SOURCES[k].tier === 'blog').length; }
+  function shopEntries(b){
+    return Object.entries(b.sr).filter(([k]) => SOURCES[k].tier === 'shop' && b.sr[k].rating && b.sr[k].count);
+  }
+  function shopAggregate(b){
+    const entries = shopEntries(b);
+    if(entries.length === 0) return null;
+    let totalRating = 0, totalCount = 0, sources = [];
+    entries.forEach(([k, v]) => { totalRating += v.rating * v.count; totalCount += v.count; sources.push(k); });
+    const avgRating = totalRating / totalCount;
+    const p = (avgRating - 1) / 4; const z = 1.96;
+    const lcb_p = (p + z*z/(2*totalCount) - z * Math.sqrt(p*(1-p)/totalCount + z*z/(4*totalCount*totalCount))) / (1 + z*z/totalCount);
+    return {avgRating, wilsonRating: lcb_p * 4 + 1, totalCount, sources};
+  }
+  function wilsonForLine(rating, count){
+    const p = (rating - 1) / 4; const z = 1.96;
+    const lcb_p = (p + z*z/(2*count) - z * Math.sqrt(p*(1-p)/count + z*z/(4*count*count))) / (1 + z*z/count);
+    return lcb_p * 4 + 1;
   }
 
-  const r = computeRow(cropKey, y, inp);
-  const cls = netoClass(r.neto);
+  function trustScore(b, all){
+    const w = PROFILES[state.profile];
+    const indie = indieCount(b); const ec = b.ec.length;
+    const mag = magCount(b); const blog = blogCount(b);
+    const shop = shopAggregate(b);
+    const wpws = all.map(x => (15 - x.temp) / x.weight);
+    const eurs = all.map(x => x.eur);
+    const minW = Math.min(...wpws), maxW = Math.max(...wpws);
+    const minE = Math.min(...eurs), maxE = Math.max(...eurs);
+    const wpw = (15 - b.temp) / b.weight;
+    const wpwN = maxW === minW ? 0.5 : (wpw - minW) / (maxW - minW);
+    const priceN = maxE === minE ? 0.5 : 1 - (b.eur - minE) / (maxE - minE);
+    const indieN = Math.min(1, (indie + ec * 0.5) / 5);
+    const magN = Math.min(1, mag / 2);
+    const blogN = Math.min(1, blog / 3);
+    const shopN = shop ? Math.max(0, (shop.wilsonRating - 3) / 2) : 0;
+    const breakdown = {
+      indie: w.indie * indieN * 100, mag: w.mag * magN * 100,
+      blog: w.blog * blogN * 100, shop: w.shop * shopN * 100,
+      wpw: w.wpw * wpwN * 100, price: w.price * priceN * 100
+    };
+    return {score: Math.round(Object.values(breakdown).reduce((a,b)=>a+b, 0)), breakdown};
+  }
 
-  const profEl = document.getElementById('profitDisplay');
-  profEl.className = 'profit-big ' + (r.neto < 0 ? 'neto-neg' : r.neto < 150 ? 'neto-warn' : 'neto-pos');
-  profEl.textContent = (r.neto > 0 ? '+' : '') + r.neto.toFixed(0) + ' €/ha';
+  function recomputeScores(){
+    BAGS.forEach(b => { const r = trustScore(b, BAGS); b._score = r.score; b._breakdown = r.breakdown; });
+  }
 
-  const profUnit = document.getElementById('profitUnit');
-  profUnit.textContent = inp.support > 0 ? '€/ha (neto, koos toetustega)' : '€/ha (neto, ilma toetusteta)';
-  document.getElementById('beVal').textContent = r.breakeven.toFixed(2) + ' t/ha';
-  document.getElementById('beValPrice').textContent = r.priceBreakeven !== null ? r.priceBreakeven.toFixed(1) + ' €/t' : '–';
-
-  // Breakdown
-  const supportLine = inp.support > 0
-    ? `<div class="bline"><span class="bline-label">Toetused</span><span class="bline-val">+${inp.support.toFixed(0)} €/ha</span></div>`
-    : '';
-  document.getElementById('breakdown').innerHTML = `
-    <div class="bline revenue">
-      <span class="bline-label">Müügitulu (${y}×${r.price})</span>
-      <span class="bline-val">${(y * r.price).toFixed(0)} €/ha</span>
-    </div>
-    ${supportLine}
-    <div style="height:6px"></div>
-    <div class="bline"><span class="bline-label">Väetis</span><span class="bline-val">${r.fert.toFixed(0)} €/ha</span></div>
-    <div class="bline"><span class="bline-label">Taimekaitse</span><span class="bline-val">${r.chem.toFixed(0)} €/ha</span></div>
-    <div class="bline"><span class="bline-label">Seeme</span><span class="bline-val">${r.seed} €/ha</span></div>
-    <div class="bline"><span class="bline-label">Kütus</span><span class="bline-val">${r.fuel.toFixed(0)} €/ha</span></div>
-    <div class="bline"><span class="bline-label">Kuivatus</span><span class="bline-val">${r.drying.toFixed(0)} €/ha</span></div>
-    <div class="bline"><span class="bline-label">Transport</span><span class="bline-val">${r.transport.toFixed(0)} €/ha</span></div>
-    <div class="bline total"><span class="bline-label">Muutuvkulud</span><span class="bline-val">${r.varCost.toFixed(0)} €/ha</span></div>
-    <div class="bline total"><span class="bline-label">Püsikulud</span><span class="bline-val">${inp.fixed} €/ha</span></div>
-    <div class="bline total"><span class="bline-label">Kogukulu</span><span class="bline-val">${r.totalCost.toFixed(0)} €/ha</span></div>
-  `;
-
-  // Recommendation
-  const recs = c.recs;
-  let recText, recCls;
-  if (r.neto >= 150) { recText = recs.good; recCls = ''; }
-  else if (r.neto >= -50) { recText = recs.mid; recCls = 'warn'; }
-  else { recText = recs.bad; recCls = 'bad'; }
-  const recEl = document.getElementById('recBox');
-  recEl.textContent = recText;
-  recEl.className = 'rec-box ' + recCls;
-}
-
-// ─── Slider sync ──────────────────────────────────────────────────────────────
-
-function updateTransDisplay() {
-  const km = +document.getElementById('inp_trans').value || 100;
-  const eurT = (0.08 * km + 2.70).toFixed(2);
-  const el = document.getElementById('disp_trans_eur');
-  if (el) el.textContent = eurT + ' €/t';
-}
-
-function updateFuelHaDisplay() {
-  const fuelL = +document.getElementById('inp_fuel_l').value;
-  const fuelHa = document.getElementById('disp_fuel_ha');
-  if (fuelHa) fuelHa.textContent = Math.round(CROPS[activeCrop].fuelLitres * fuelL) + ' €/ha';
-}
-
-function syncSlider(cropKey) {
-  const c = CROPS[cropKey];
-  const slider = document.getElementById('yieldSlider');
-  slider.min = 0;
-  slider.max = c.sliderMax;
-  slider.step = 0.1;
-  slider.value = c.defaultSlider;
-  const mn = document.getElementById('yieldMin');
-  const mx = document.getElementById('yieldMax');
-  if (mn) mn.textContent = 'toetus';
-  if (mx) mx.textContent = c.sliderMax;
-}
-
-// ─── Crop price input injection ───────────────────────────────────────────────
-
-function ensureCropPriceInput(cropKey) {
-  // Just ensure the data exists — rendering is done by showCropPriceInput
-  if (!CROPS[cropKey]._priceReady) CROPS[cropKey]._priceReady = true;
-}
-
-function showCropPriceInput(cropKey) {
-  const c = CROPS[cropKey];
-  const wrap = document.getElementById('cropPriceSliderWrap');
-  if (!wrap) return;
-  const min = Math.round(c.defaultPrice * 0.4 / 10) * 10;
-  const max = Math.round(c.defaultPrice * 2.5 / 10) * 10;
-  const cur = c._currentPrice || c.defaultPrice;
-  wrap.innerHTML = `
-    <div class="input-group slider-group">
-      <div class="slider-top">
-        <label>${c.priceLabel}</label>
-        <span class="slider-cur" id="disp_crop_price_${cropKey}">${cur}</span>
-      </div>
-      <input type="range" id="crop_price_${cropKey}" min="${min}" max="${max}" step="1" value="${cur}">
-      <div class="slider-range"><span>${min}</span><span>${max}</span></div>
-    </div>`;
-  document.getElementById('crop_price_' + cropKey).addEventListener('input', function() {
-    document.getElementById('disp_crop_price_' + cropKey).textContent = this.value;
-    CROPS[cropKey]._currentPrice = +this.value;
-    updateAll();
-  });
-}
-
-// ─── Main update ──────────────────────────────────────────────────────────────
-
-function updateAll() {
-  const inp = getInputs();
-  renderChart(activeCrop, inp);
-  renderPanel(activeCrop, inp);
-}
-
-window.__initApp = function() {
-// ─── Init ─────────────────────────────────────────────────────────────────────
-// Pre-create all crop price inputs
-Object.keys(CROPS).forEach(k => ensureCropPriceInput(k));
-showCropPriceInput('oder');
-
-// Crop tab clicks
-document.querySelectorAll('.crop-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.crop-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeCrop = btn.dataset.crop;
-    syncSlider(activeCrop);
-    showCropPriceInput(activeCrop);
-    updateFuelHaDisplay();
-    updateAll();
-  });
-});
-
-// Slider
-document.getElementById('yieldSlider').addEventListener('input', () => {
-  const inp = getInputs();
-  updateYieldLine();
-  renderPanel(activeCrop, inp);
-});
-
-// Sync global slider displays
-const globalSliders = [
-  {id:'inp_npk', disp:'disp_npk', fmt: v => npkSliderToPrice(v) === 0 ? 'ei kasuta' : npkSliderToPrice(v)},
-  {id:'inp_n', disp:'disp_n', fmt: v => nvSliderToPrice(v) === 0 ? 'ei kasuta' : nvSliderToPrice(v)},
-  {id:'inp_fuel_l', disp:'disp_fuel_l', fmt: v => (+v).toFixed(2), extra: v => {
-    const fuelHa = document.getElementById('disp_fuel_ha');
-    if (fuelHa) fuelHa.textContent = Math.round(CROPS[activeCrop].fuelLitres * +v) + ' €/ha';
-  }},
-  {id:'inp_fixed',  disp:'disp_fixed',  fmt: v => v},
-  {id:'inp_dry',    disp:'disp_dry',    fmt: v => v},
-  {id:'inp_trans', disp:'disp_trans', fmt: v => v, extra: v => {
-    const eurT = (0.08 * +v + 2.70).toFixed(2);
-    const el = document.getElementById('disp_trans_eur');
-    if (el) el.textContent = eurT + ' €/t';
-  }},
-  {id:'inp_support',disp:'disp_support',fmt: v => v},
-];
-globalSliders.forEach(({id, disp, fmt, extra}) => {
-  const el = document.getElementById(id);
-  const dp = document.getElementById(disp);
-  if (el && dp) {
-    el.addEventListener('input', () => {
-      dp.textContent = fmt(el.value);
-      if (extra) extra(el.value);
-      updateAll();
+  function visible(){
+    return BAGS.filter(b => {
+      const pCmp = Math.round(b.eur * RATES[state.currency]);
+      if(pCmp < state.priceMin || pCmp > state.priceMax) return false;
+      if(b.temp < state.tempMin || b.temp > state.tempMax) return false;
+      if(b.weight > state.wtMax) return false;
+      if(state.type !== 'all' && b.t !== state.type) return false;
+      if(state.ins !== 'all' && b.ins !== state.ins) return false;
+      const ic = indieCount(b);
+      if(state.cons === '1' && ic < 1) return false;
+      if(state.cons === '2' && ic < 2) return false;
+      if(state.cons === '3' && ic < 3) return false;
+      if(state.cons === 'ec' && b.ec.length === 0) return false;
+      return true;
     });
   }
-});
 
-// Initial render
-syncSlider('oder');
-updateFuelHaDisplay();
-updateTransDisplay();
-updateAll();
-};
-// If Chart.js already loaded (cached), run immediately
-if (window.Chart) { window.__initApp(); }
+  function sortBags(list){
+    switch(state.sort){
+      case 'score': return list.slice().sort((a,b)=> b._score - a._score);
+      case 'indie': return list.slice().sort((a,b)=> (indieCount(b) + b.ec.length*0.5) - (indieCount(a) + a.ec.length*0.5));
+      case 'shop': return list.slice().sort((a,b)=> {
+        const sa=shopAggregate(a), sb=shopAggregate(b);
+        if(!sa && !sb) return 0; if(!sa) return 1; if(!sb) return -1;
+        return sb.wilsonRating - sa.wilsonRating;
+      });
+      case 'shopcount': return list.slice().sort((a,b)=> {
+        const sa=shopAggregate(a), sb=shopAggregate(b);
+        return (sb?sb.totalCount:0) - (sa?sa.totalCount:0);
+      });
+      case 'price': return list.slice().sort((a,b)=> a.eur - b.eur);
+      case 'weight': return list.slice().sort((a,b)=> a.weight - b.weight);
+      case 'wpw': return list.slice().sort((a,b)=> ((15-b.temp)/b.weight) - ((15-a.temp)/a.weight));
+      default: return list;
+    }
+  }
 
+  function renderActiveTags(){
+    const tags = [];
+    if(state.priceMin !== DEFAULTS.priceMin || state.priceMax !== DEFAULTS.priceMax) tags.push({k:'price', label:`Budget: ${SYM[state.currency]}${state.priceMin}–${SYM[state.currency]}${state.priceMax}`});
+    if(state.tempMin !== DEFAULTS.tempMin || state.tempMax !== DEFAULTS.tempMax) tags.push({k:'temp', label:`Temp: ${state.tempMin} to ${state.tempMax >= 0 ? '+' : ''}${state.tempMax}°C`});
+    if(state.wtMax !== DEFAULTS.wtMax) tags.push({k:'wt', label:`≤${state.wtMax} g`});
+    if(state.type !== 'all'){ const m={hooded:'Hooded',hoodless:'Hoodless',quilt:'Quilt'}; tags.push({k:'type', label:m[state.type]}); }
+    if(state.ins !== 'all') tags.push({k:'ins', label:state.ins.charAt(0).toUpperCase() + state.ins.slice(1)});
+    if(state.cons !== '0'){ const m={'1':'≥1 indie','2':'≥2 indie','3':'≥3 indie','ec':"Editor's pick"}; tags.push({k:'cons', label:m[state.cons]}); }
+    const wrap = document.getElementById('f9Active');
+    wrap.innerHTML = tags.map(t => `<button class="f9-active-tag" data-clear="${t.k}">${t.label}</button>`).join('');
+    wrap.querySelectorAll('.f9-active-tag').forEach(b => {
+      b.addEventListener('click', () => {
+        const k = b.dataset.clear;
+        if(k === 'price'){ state.priceMin = DEFAULTS.priceMin; state.priceMax = DEFAULTS.priceMax; setSlidersFromState(); }
+        else if(k === 'temp'){ state.tempMin = DEFAULTS.tempMin; state.tempMax = DEFAULTS.tempMax; setSlidersFromState(); }
+        else if(k === 'wt'){ state.wtMax = DEFAULTS.wtMax; setSlidersFromState(); }
+        else if(k === 'type'){ state.type = 'all'; setChipFromState('type'); }
+        else if(k === 'ins'){ state.ins = 'all'; setChipFromState('ins'); }
+        else if(k === 'cons'){ state.cons = '0'; setChipFromState('cons'); }
+        render();
+      });
+    });
+  }
+
+  let chart1, chart2, chart3;
+  function renderCharts(visList){
+    const visIds = new Set(visList.map(b => b.n));
+    const c1A=[], c1F=[], c2A=[], c2F=[];
+    BAGS.forEach(b => {
+      const pCmp = Math.round(b.eur * RATES[state.currency]);
+      const isVis = visIds.has(b.n);
+      const p1 = {x:pCmp, y:b.weight, _b:b};
+      const p2 = {x:pCmp, y:b._score, _b:b};
+      (isVis ? c1A : c1F).push(p1);
+      (isVis ? c2A : c2F).push(p2);
+    });
+    const sym = SYM[state.currency];
+
+    // Compute dynamic axis bounds from VISIBLE data with padding
+    let xMin = Infinity, xMax = -Infinity, yMinW = Infinity, yMaxW = -Infinity;
+    if(c1A.length > 0){
+      c1A.forEach(p => {
+        if(p.x < xMin) xMin = p.x; if(p.x > xMax) xMax = p.x;
+        if(p.y < yMinW) yMinW = p.y; if(p.y > yMaxW) yMaxW = p.y;
+      });
+    } else {
+      // Empty: use slider bounds as fallback
+      xMin = state.priceMin * RATES[state.currency];
+      xMax = state.priceMax * RATES[state.currency];
+      yMinW = 0; yMaxW = state.wtMax;
+    }
+    const xPad = Math.max(20, (xMax - xMin) * 0.08);
+    const yPadW = Math.max(80, (yMaxW - yMinW) * 0.10);
+    const xAxisMin = Math.max(0, Math.floor((xMin - xPad)/10)*10);
+    const xAxisMax = Math.ceil((xMax + xPad)/10)*10;
+    const yWMin = Math.max(0, Math.floor((yMinW - yPadW)/100)*100);
+    const yWMax = Math.ceil((yMaxW + yPadW)/100)*100;
+
+    const baseOpts = (yLabel, yMin, yMax, tooltipFn) => ({
+      responsive:true, maintainAspectRatio:false, animation:{duration:150},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:tooltipFn}}
+      },
+      onClick:(evt,els,ch)=>{
+        if(els.length === 0) return;
+        const point = ch.data.datasets[els[0].datasetIndex].data[els[0].index];
+        if(point && point._b){
+          state.highlight = point._b.n; render();
+          setTimeout(()=>{
+            const card = document.querySelector(`[data-bagname="${CSS.escape(point._b.n)}"]`);
+            if(card){ card.scrollIntoView({behavior:'smooth', block:'center'}); setTimeout(()=>{ state.highlight = null; render(); }, 1400); }
+          }, 50);
+        }
+      },
+      scales:{
+        x:{title:{display:true,text:'Price ('+sym+')',color:'#888780',font:{size:10}},ticks:{color:'#888780',font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'},min:xAxisMin,max:xAxisMax},
+        y:{title:{display:true,text:yLabel,color:'#888780',font:{size:10}},ticks:{color:'#888780',font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'},min:yMin,max:yMax}
+      }
+    });
+
+    if(!chart1){
+      chart1 = new Chart(document.getElementById('f9Chart1'), {
+        type:'scatter',
+        data:{datasets:[
+          {label:'faded', data:c1F, backgroundColor:'rgba(150,150,150,0.18)', pointRadius:3, order:2},
+          {label:'active', data:c1A, backgroundColor:'#185FA5', pointRadius:5, pointHoverRadius:7, order:1}
+        ]},
+        options: baseOpts('Weight (g)', yWMin, yWMax,
+          (c)=> `${c.raw._b.n}: ${sym}${Math.round(c.raw._b.eur*RATES[state.currency])} · ${c.raw._b.weight}g`)
+      });
+    } else {
+      chart1.data.datasets[0].data = c1F;
+      chart1.data.datasets[1].data = c1A;
+      chart1.options.scales.x.title.text = 'Price ('+sym+')';
+      chart1.options.scales.x.min = xAxisMin; chart1.options.scales.x.max = xAxisMax;
+      chart1.options.scales.y.min = yWMin; chart1.options.scales.y.max = yWMax;
+      chart1.options.plugins.tooltip.callbacks.label = (c)=> `${c.raw._b.n}: ${sym}${Math.round(c.raw._b.eur*RATES[state.currency])} · ${c.raw._b.weight}g`;
+      chart1.update('none');
+    }
+
+    if(!chart2){
+      chart2 = new Chart(document.getElementById('f9Chart2'), {
+        type:'scatter',
+        data:{datasets:[
+          {label:'faded', data:c2F, backgroundColor:'rgba(150,150,150,0.18)', pointRadius:3, order:2},
+          {label:'active', data:c2A, backgroundColor:'#0F6E56', pointRadius:5, pointHoverRadius:7, order:1}
+        ]},
+        options: baseOpts('Trust (0–100)', 0, 100,
+          (c)=> `${c.raw._b.n}: trust ${c.raw._b._score} · ${sym}${Math.round(c.raw._b.eur*RATES[state.currency])}`)
+      });
+    } else {
+      chart2.data.datasets[0].data = c2F;
+      chart2.data.datasets[1].data = c2A;
+      chart2.options.scales.x.title.text = 'Price ('+sym+')';
+      chart2.options.scales.x.min = xAxisMin; chart2.options.scales.x.max = xAxisMax;
+      chart2.options.plugins.tooltip.callbacks.label = (c)=> `${c.raw._b.n}: trust ${c.raw._b._score} · ${sym}${Math.round(c.raw._b.eur*RATES[state.currency])}`;
+      chart2.update('none');
+    }
+
+    // Chart 3: Value for money — top 12 visible bags by trust-per-money
+    // Ratio: trust score per 100 currency units. Higher = better value.
+    // We require a minimum trust score so cheap bags with no editorial
+    // coverage don't dominate the chart on denominator math alone.
+    document.getElementById('f9Chart3CurSym').textContent = sym;
+    const MIN_TRUST_FOR_VALUE = 35;
+    const valueRanked = visList
+      .filter(b => b._score >= MIN_TRUST_FOR_VALUE)
+      .map(b => {
+        const priceConverted = b.eur * RATES[state.currency];
+        const ratio = priceConverted > 0 ? (b._score / priceConverted) * 100 : 0;
+        return { b, ratio, priceConverted };
+      })
+      .filter(x => x.ratio > 0)
+      .sort((a, b) => b.ratio - a.ratio)
+      .slice(0, 12);
+    const v3Labels = valueRanked.map(x => x.b.n.length > 26 ? x.b.n.slice(0, 24) + '…' : x.b.n);
+    const v3Values = valueRanked.map(x => x.ratio);
+    const v3Bgs = valueRanked.map(x => {
+      const s = x.b._score;
+      // Color by trust quality so the chart is honest:
+      // a high ratio from a bag with no editorial backing should look different.
+      if(s >= 60) return '#2d7050'; // good (deep moss)
+      if(s >= 40) return '#8a6018'; // mid (amber)
+      return '#a93c2c';             // low trust (rust) — high ratio but thin evidence
+    });
+    const v3Refs = valueRanked.map(x => x.b);
+
+    if(!chart3){
+      chart3 = new Chart(document.getElementById('f9Chart3'), {
+        type:'bar',
+        data:{
+          labels: v3Labels,
+          datasets:[{
+            label:'Trust per 100 '+sym,
+            data: v3Values,
+            backgroundColor: v3Bgs,
+            borderRadius: 3,
+            borderSkipped: false,
+            _refs: v3Refs
+          }]
+        },
+        options:{
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          animation:{duration:200},
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{
+              title: (items) => items[0] ? v3Refs[items[0].dataIndex].n : '',
+              label: (c) => {
+                const b = v3Refs[c.dataIndex];
+                const priceConv = Math.round(b.eur*RATES[state.currency]);
+                return [
+                  `${c.raw.toFixed(1)} trust per 100${sym}`,
+                  `Trust ${b._score} · ${sym}${priceConv} · ${b.weight}g`
+                ];
+              }
+            }}
+          },
+          onClick: (evt, els, ch) => {
+            if(els.length === 0) return;
+            const bag = v3Refs[els[0].index];
+            if(!bag) return;
+            state.highlight = bag.n; render();
+            setTimeout(() => {
+              const card = document.querySelector(`[data-bagname="${CSS.escape(bag.n)}"]`);
+              if(card){ card.scrollIntoView({behavior:'smooth', block:'center'}); setTimeout(()=>{ state.highlight = null; render(); }, 1400); }
+            }, 50);
+          },
+          scales:{
+            x:{title:{display:true,text:'Trust per 100 '+sym,color:'#888780',font:{size:10}},ticks:{color:'#888780',font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'},beginAtZero:true},
+            y:{ticks:{color:'#888780',font:{size:10},autoSkip:false},grid:{display:false}}
+          }
+        }
+      });
+    } else {
+      chart3.data.labels = v3Labels;
+      chart3.data.datasets[0].data = v3Values;
+      chart3.data.datasets[0].backgroundColor = v3Bgs;
+      chart3.data.datasets[0]._refs = v3Refs;
+      chart3.options.scales.x.title.text = 'Trust per 100 '+sym;
+      chart3.options.plugins.tooltip.callbacks.title = (items) => items[0] ? v3Refs[items[0].dataIndex].n : '';
+      chart3.options.plugins.tooltip.callbacks.label = (c) => {
+        const b = v3Refs[c.dataIndex];
+        const priceConv = Math.round(b.eur*RATES[state.currency]);
+        return [
+          `${c.raw.toFixed(1)} trust per 100${sym}`,
+          `Trust ${b._score} · ${sym}${priceConv} · ${b.weight}g`
+        ];
+      };
+      chart3.options.onClick = (evt, els, ch) => {
+        if(els.length === 0) return;
+        const bag = v3Refs[els[0].index];
+        if(!bag) return;
+        state.highlight = bag.n; render();
+        setTimeout(() => {
+          const card = document.querySelector(`[data-bagname="${CSS.escape(bag.n)}"]`);
+          if(card){ card.scrollIntoView({behavior:'smooth', block:'center'}); setTimeout(()=>{ state.highlight = null; render(); }, 1400); }
+        }, 50);
+      };
+      chart3.update('none');
+    }
+  }
+
+  function trustBars(score){
+    const dots = Math.round(score / 20);
+    let html = '<span class="f9-bars">';
+    for(let i=0; i<5; i++) html += `<span class="f9-bar${i < dots ? ' on' : ''}"></span>`;
+    return html + '</span>';
+  }
+
+  function cardHtml(b, rank){
+    const isCompared = state.compare.has(b.n);
+    const isHighlighted = state.highlight === b.n;
+    const cls = (isCompared ? ' compared' : '') + (isHighlighted ? ' highlighted' : '');
+    const editorialEntries = Object.entries(b.sr).filter(([k]) => SOURCES[k].tier !== 'shop');
+    const shopList = shopEntries(b);
+    const shopAgg = shopAggregate(b);
+    const editorialPills = editorialEntries.length > 0 ? editorialEntries.sort(([a],[c])=>{
+      const order={ind:0,mag:1,blog:2}; return order[SOURCES[a].tier] - order[SOURCES[c].tier];
+    }).map(([k, v]) => {
+      const star = b.ec.includes(k) ? ' ★' : '';
+      const tierLabel = SOURCES[k].tier === 'ind' ? 'lab' : SOURCES[k].tier === 'mag' ? 'mag' : 'blog';
+      const tooltip = v.note ? `${SOURCES[k].name}: ${v.note}` : SOURCES[k].name;
+      return `<span class="f9-cred ${SOURCES[k].tier}" title="${tooltip}">${SOURCES[k].name}${star}</span>`;
+    }).join('') : '<div class="f9-noevidence">No editorial reviews indexed yet — bag may still be legit, just under-covered by review sites tracked here.</div>';
+    // Collect notes from editorial sources
+    const editorialNotes = editorialEntries.filter(([k, v]) => v.note).map(([k, v]) => `<span class="f9-edit-note-line"><b>${SOURCES[k].name}:</b> ${v.note}</span>`);
+    const shopRows = shopList.length > 0 ? shopList.map(([k, v]) => {
+      const w = wilsonForLine(v.rating, v.count);
+      return `<div class="f9-shop-line">
+        <span class="f9-shop-line-name">${SOURCES[k].name}</span><b>${w.toFixed(1)}★</b>
+        <div class="f9-shop-bar" title="Wilson 95% LCB: ${w.toFixed(2)}★ (raw: ${v.rating}★)"><div class="f9-shop-bar-raw" style="width:${(v.rating/5)*100}%"></div><div class="f9-shop-bar-wilson" style="width:${(w/5)*100}%"></div></div>
+        <span class="f9-shop-line-cnt">${v.count.toLocaleString()}</span>
+      </div>`;
+    }).join('') : '<div class="f9-noevidence">No shop ratings indexed</div>';
+    const euPill = b.euStock ? '<span class="f9-cred eu">Easy in EU</span>' : '';
+    const typeLabel = b.t === 'hooded' ? 'hooded' : (b.t === 'hoodless' ? 'hoodless' : (b.t === 'double' ? 'double' : 'quilt'));
+    const scoreClass = b._score >= 60 ? 'high' : (b._score >= 40 ? 'mid' : '');
+    const breakdown = b._breakdown;
+    const tipText = `Indie ${breakdown.indie.toFixed(0)}\nMag ${breakdown.mag.toFixed(0)}\nBlog ${breakdown.blog.toFixed(0)}\nShop ${breakdown.shop.toFixed(0)}\nW/g ${breakdown.wpw.toFixed(0)}\nPrice ${breakdown.price.toFixed(0)}`;
+    return `<div class="f9-card${cls}" data-bagname="${b.n}">
+      <div class="f9-checkcol">
+        <span class="f9-rank">${rank}</span>
+        <button class="f9-check" data-cmp="${b.n}" aria-pressed="${isCompared}">${isCompared ? '✓' : ''}</button>
+      </div>
+      <div class="f9-cardbody">
+        <div class="f9-maininfo">
+          <div class="f9-head">
+            <div style="flex:1;min-width:0">
+              <div class="f9-name">${b.n}<span class="f9-score-pill ${scoreClass}">trust ${b._score}<span class="f9-tip">${tipText}</span></span>${trustBars(b._score)}</div>
+              <div class="f9-sub">${b.fill} · ${typeLabel}${euPill ? ' · ' : ''}${euPill}</div>
+              ${b.note ? `<div class="f9-sub" style="margin-top:4px;font-style:italic">${b.note}</div>` : ''}
+            </div>
+            <div class="f9-meta"><b>${b.weight}<span style="font-size:11px;color:var(--ink-tertiary);font-family:var(--font-mono);font-weight:500"> g</span></b><span>${b.temp >= 0 ? '+' : ''}${b.temp}°C comfort</span><span class="price-tag">${fmtMoney(b.eur)}</span></div>
+          </div>
+        </div>
+        <div class="f9-evidence-v12">
+          ${(b.pros && b.pros.length > 0) || (b.cons && b.cons.length > 0) ? `
+            <div class="f9-proscons">
+              ${b.pros && b.pros.length > 0 ? `<div class="f9-pros"><div class="f9-pc-header"><span class="f9-pc-icon" aria-hidden="true">+</span>Strengths</div><div class="f9-pc-list">${b.pros.map(p => `<span class="f9-pc-item">${p}</span>`).join('')}</div></div>` : ''}
+              ${b.cons && b.cons.length > 0 ? `<div class="f9-cons"><div class="f9-pc-header"><span class="f9-pc-icon" aria-hidden="true">−</span>Trade-offs</div><div class="f9-pc-list">${b.cons.map(co => `<span class="f9-pc-item">${co}</span>`).join('')}</div></div>` : ''}
+            </div>
+          ` : ''}
+          <div class="f9-evhdr-v12">${editorialEntries.length > 0 ? `<span>Backed by</span>` : ''}<span class="f9-evhdr-count" style="background:var(--good-soft);color:var(--good)">${editorialEntries.length} ${editorialEntries.length === 1 ? 'source' : 'sources'}</span>${b.ec.length > 0 ? `<span class="f9-evhdr-count" style="background:var(--accent-soft);color:var(--accent-deep)">${b.ec.length} editor's pick${b.ec.length > 1 ? 's' : ''}</span>` : ''}</div>
+          <div class="f9-creds">${editorialPills}</div>
+          <details class="f9-shop-toggle" ${state.expandShop ? 'open' : ''}>
+            <summary><span>Shop ratings</span><span class="f9-evhdr-count" style="background:var(--info-soft);color:var(--info)">${shopList.length} ${shopList.length === 1 ? 'shop' : 'shops'}${shopAgg ? ' · ' + shopAgg.totalCount.toLocaleString() + ' buyers' : ''}</span></summary>
+            <div class="f9-shop-stack" style="margin-top:10px">${shopRows}</div>
+          </details>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderCmpDrawer(){
+    const wrap = document.getElementById('f9CmpDrawer');
+    if(state.compare.size === 0){ wrap.innerHTML = ''; return; }
+    const cmpBags = [...state.compare].map(n => BAGS.find(b => b.n === n)).filter(Boolean);
+    if(cmpBags.length === 0){ wrap.innerHTML = ''; return; }
+    const minPrice = Math.min(...cmpBags.map(b=>b.eur));
+    const minWeight = Math.min(...cmpBags.map(b=>b.weight));
+    const minTemp = Math.min(...cmpBags.map(b=>b.temp));
+    const maxWpw = Math.max(...cmpBags.map(b=>(15-b.temp)/b.weight));
+    const maxScore = Math.max(...cmpBags.map(b=>b._score));
+    const rows = cmpBags.map(b => {
+      const wpw = (15 - b.temp) / b.weight;
+      const sd = shopAggregate(b);
+      return `<tr>
+        <td><b>${b.n}</b></td>
+        <td class="${b.eur===minPrice?'best':''}">${fmtMoney(b.eur)}</td>
+        <td class="${b.weight===minWeight?'best':''}">${b.weight} g</td>
+        <td class="${b.temp===minTemp?'best':''}">${b.temp}°C</td>
+        <td class="${wpw===maxWpw?'best':''}">${(wpw*1000).toFixed(2)}</td>
+        <td class="${b._score===maxScore?'best':''}">${b._score}</td>
+        <td>${sd ? sd.wilsonRating.toFixed(1) + '★ × ' + sd.totalCount : '—'}</td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<div class="f9-cmpdrawer">
+        <div class="f9-cmpdrawer-h"><b>Comparing ${cmpBags.length} bag${cmpBags.length===1?'':'s'}</b><button onclick="(()=>{window.f9State.compare.clear();window.f9Render();})()" style="font-size:11px;background:transparent;border:0.5px solid #AFA9EC;color:#3C3489;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:inherit">Clear all</button></div>
+        <table class="f9-cmptable"><thead><tr><th>Bag</th><th>Price</th><th>Weight</th><th>Temp</th><th>W/g ×1000</th><th>Trust</th><th>Buyer rating</th></tr></thead><tbody>${rows}</tbody></table>
+      </div>`;
+  }
+
+  function renderFast(){
+    // Fast path for slider drag: only update count, charts, and active tags.
+    // Skip the expensive cardHtml rebuild — that happens on slider release.
+    recomputeScores(); renderActiveTags();
+    const list = visible();
+    document.getElementById('f9Count').innerHTML = `<b>${list.length}</b> of ${BAGS.length} bags match`;
+    renderCharts(list);
+  }
+
+  function render(){
+    recomputeScores(); renderActiveTags();
+    const list = visible();
+    const sorted = sortBags(list);
+    document.getElementById('f9Count').innerHTML = `<b>${list.length}</b> of ${BAGS.length} bags match`;
+    renderCmpDrawer(); renderCharts(list);
+    const out = document.getElementById('f9List');
+    if(sorted.length === 0){
+      out.innerHTML = `<div class="f9-empty">No bags match.<br><button id="f9Reset">Reset filters</button></div>`;
+      const rb = document.getElementById('f9Reset'); if(rb) rb.addEventListener('click', resetFilters);
+    } else {
+      out.innerHTML = sorted.map((b,i)=> cardHtml(b, i+1)).join('');
+      out.querySelectorAll('.f9-check').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const n = btn.dataset.cmp;
+          if(state.compare.has(n)) state.compare.delete(n);
+          else if(state.compare.size < 4) state.compare.add(n);
+          else { showToast('Max 4 bags in compare'); return; }
+          render();
+        });
+      });
+    }
+    syncHash();
+  }
+  // Two render paths debounced via requestAnimationFrame:
+  // - renderFastRAF: charts + count only, used during slider drag (cheap)
+  // - renderRAF:     full rebuild including cards, used on slider release
+  let _rafPending = false, _rafFull = false;
+  function renderFastRAF(){
+    if(_rafPending) return;
+    _rafPending = true;
+    requestAnimationFrame(() => { _rafPending = false; if(_rafFull){ _rafFull = false; render(); } else { renderFast(); } });
+  }
+  function renderRAF(){
+    _rafFull = true;
+    if(_rafPending) return;
+    _rafPending = true;
+    requestAnimationFrame(() => { _rafPending = false; _rafFull = false; render(); });
+  }
+  window.f9State = state; window.f9Render = render;
+
+  function setSlidersFromState(){
+    document.getElementById('f9PriceMin').value = state.priceMin;
+    document.getElementById('f9PriceMax').value = state.priceMax;
+    document.getElementById('f9TempMin').value = state.tempMin;
+    document.getElementById('f9TempMax').value = state.tempMax;
+    document.getElementById('f9Wt').value = state.wtMax;
+    updatePrice(); updateTemp(); updateWt();
+  }
+  function setChipFromState(g){
+    document.querySelectorAll(`.f9-chip[data-g="${g}"]`).forEach(c => { c.setAttribute('aria-pressed', c.dataset.f === state[g] ? 'true' : 'false'); });
+  }
+  function resetFilters(){
+    Object.assign(state, JSON.parse(JSON.stringify(DEFAULTS)));
+    setSlidersFromState();
+    setChipFromState('type'); setChipFromState('ins'); setChipFromState('cons');
+    render();
+  }
+  function setupRange(fillId, minId, maxId, valId, formatter, kMin, kMax){
+    const minEl = document.getElementById(minId); const maxEl = document.getElementById(maxId);
+    const fill = document.getElementById(fillId); const valOut = document.getElementById(valId);
+
+    function update(activeEl, fullRender){
+      let lo = parseFloat(minEl.value), hi = parseFloat(maxEl.value);
+      // Swap if crossed (matches v8 behavior — works smoothly at narrow ranges)
+      if(lo > hi){ const t = lo; lo = hi; hi = t; }
+      // Bring the active thumb to top z-index so user can grab it
+      if(activeEl === minEl){ minEl.style.zIndex = 5; maxEl.style.zIndex = 4; }
+      else if(activeEl === maxEl){ maxEl.style.zIndex = 5; minEl.style.zIndex = 4; }
+      const min = parseFloat(minEl.min), max = parseFloat(minEl.max);
+      const lp = ((lo - min) / (max - min)) * 100;
+      const rp = ((hi - min) / (max - min)) * 100;
+      fill.style.left = lp + '%'; fill.style.width = (rp - lp) + '%';
+      valOut.textContent = formatter(lo, hi);
+      state[kMin] = lo; state[kMax] = hi;
+      if(fullRender) renderRAF(); else renderFastRAF();
+    }
+    minEl.addEventListener('input', () => update(minEl, false));
+    maxEl.addEventListener('input', () => update(maxEl, false));
+    minEl.addEventListener('change', () => update(minEl, true));
+    maxEl.addEventListener('change', () => update(maxEl, true));
+    return () => update(null, true);
+  }
+  function setupSingle(fillId, inputId, valId, formatter, k){
+    const inp = document.getElementById(inputId); const fill = document.getElementById(fillId);
+    const valOut = document.getElementById(valId);
+    function update(fullRender){
+      const v = parseFloat(inp.value);
+      const min = parseFloat(inp.min), max = parseFloat(inp.max);
+      fill.style.width = (((v - min) / (max - min)) * 100) + '%';
+      valOut.textContent = formatter(v); state[k] = v;
+      if(fullRender) renderRAF(); else renderFastRAF();
+    }
+    inp.addEventListener('input', () => update(false));
+    inp.addEventListener('change', () => update(true));
+    return () => update(true);
+  }
+  let updatePrice, updateTemp, updateWt;
+  updatePrice = setupRange('f9PriceFill','f9PriceMin','f9PriceMax','f9PriceVal',
+    (lo,hi)=> SYM[state.currency] + lo + '–' + SYM[state.currency] + hi, 'priceMin','priceMax');
+  updateTemp = setupRange('f9TempFill','f9TempMin','f9TempMax','f9TempVal',
+    (lo,hi)=> lo + ' to ' + (hi >= 0 ? '+' : '') + hi + ' °C', 'tempMin','tempMax');
+  updateWt = setupSingle('f9WtFill','f9Wt','f9WtVal', (v)=> v + ' g', 'wtMax');
+
+  document.querySelectorAll('.f9-chip[data-g]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const g = btn.dataset.g;
+      document.querySelectorAll(`.f9-chip[data-g="${g}"]`).forEach(x => x.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true'); state[g] = btn.dataset.f; render();
+    });
+  });
+  document.querySelectorAll('.f9-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.f9-preset').forEach(x => x.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true'); state.profile = btn.dataset.preset; render();
+    });
+  });
+  document.querySelectorAll('.f9-curr button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.f9-curr button').forEach(x => x.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      const oldRate = RATES[state.currency]; state.currency = btn.dataset.c;
+      const newRate = RATES[state.currency];
+      const newMax = Math.round(750 * newRate / 50) * 50;
+      const minEl = document.getElementById('f9PriceMin'); const maxEl = document.getElementById('f9PriceMax');
+      minEl.max = newMax; maxEl.max = newMax;
+      state.priceMin = Math.round(state.priceMin * (newRate/oldRate));
+      state.priceMax = Math.round(state.priceMax * (newRate/oldRate));
+      if(state.priceMax > newMax) state.priceMax = newMax;
+      minEl.value = state.priceMin; maxEl.value = state.priceMax;
+      updatePrice();
+    });
+  });
+  document.getElementById('f9SortSel').addEventListener('change', e => { state.sort = e.target.value; render(); });
+  document.getElementById('f9ToggleShop').addEventListener('click', () => {
+    state.expandShop = !state.expandShop;
+    const btn = document.getElementById('f9ToggleShop');
+    btn.textContent = state.expandShop ? '📊 Shop ratings: expanded' : '📊 Shop ratings: collapsed';
+    render();
+  });
+
+  document.getElementById('f9Share').addEventListener('click', async () => {
+    syncHash(); const url = location.href;
+    try { await navigator.clipboard.writeText(url); showToast('Link copied'); }
+    catch(e) { showToast('URL: ' + url); }
+  });
+
+  function showToast(msg){
+    const t = document.getElementById('f9Toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  loadFromHash();
+  document.querySelector(`.f9-preset[data-preset="${state.profile}"]`)?.setAttribute('aria-pressed','true');
+  document.querySelectorAll('.f9-preset').forEach(b => { if(b.dataset.preset !== state.profile) b.setAttribute('aria-pressed','false'); });
+  document.querySelector(`.f9-curr button[data-c="${state.currency}"]`)?.setAttribute('aria-pressed','true');
+  document.querySelectorAll('.f9-curr button').forEach(b => { if(b.dataset.c !== state.currency) b.setAttribute('aria-pressed','false'); });
+  document.getElementById('f9SortSel').value = state.sort;
+  setChipFromState('type'); setChipFromState('ins'); setChipFromState('cons');
+  setSlidersFromState();
+
+  function init(){ render(); }
+  if(window.Chart) init(); else window.addEventListener('load', init);
+})();
 </script>
 </body>
 </html>
